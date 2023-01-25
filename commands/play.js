@@ -5,7 +5,9 @@ const music = require('../services/music');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('play')
-    .setDescription('Plays a song using the title and artist name')
+    .setDescription(
+      'Plays a song using a search term. Spotify, Deezer, Apple Music and YouTube links are also supported!'
+    )
     .addStringOption((option) =>
       option
         .setName('term')
