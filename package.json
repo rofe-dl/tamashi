@@ -1,17 +1,23 @@
 {
-  "name": "spoti-bot",
+  "name": "bbdeebot",
   "version": "1.0.0",
   "description": "A Discord bot to play a user's currently playing Spotify track",
   "main": "index.js",
   "scripts": {
     "start": "nodemon index.js",
+    "deploycommands": "node deploy-commands-globally.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Rafidul",
   "license": "MIT",
   "dependencies": {
+    "@discordjs/opus": "^0.8.0",
     "discord.js": "^14.7.1",
     "dotenv": "^16.0.3",
-    "nodemon": "^2.0.20"
+    "fs-extra": "^11.1.0",
+    "kazagumo": "^2.3.2",
+    "kazagumo-spotify": "^1.1.5",
+    "nodemon": "^2.0.20",
+    "shoukaku": "^3.3.1"
   }
 }
