@@ -1,5 +1,4 @@
 // Self made error names as key with value as the message that discord.js gives us
-
 module.exports = {
   COMMAND_NOT_FOUND:
     'I don\'t think that\'s a command I support. Type in ">>help" to see all my available commands! :D',

@@ -27,7 +27,7 @@ function initShoukaku(client) {
 
   shoukaku.on('error', (_, error) => logError(error));
   client.shoukaku = shoukaku;
-  console.log('Connected!');
+  console.log('Connected!...');
 }
 
 function initCommands(client) {
