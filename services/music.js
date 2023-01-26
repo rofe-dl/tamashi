@@ -1,9 +1,11 @@
 const Errors = require('../utils/errors');
 const Replies = require('../utils/replies');
 const { logError } = require('../utils/errorlogger');
+const { isURL } = require('../utils/regex');
 
 module.exports.play = async (message, client, phrase) => {
   // todo if search phrases are given, find spotify, deezer or apple music link first
+  // todo pause and play buttons
   try {
     if (!message.member.voice.channel) {
       return await message.reply(Errors.USER_NOT_IN_VOICE);
@@ -13,8 +15,7 @@ module.exports.play = async (message, client, phrase) => {
     const node = client.shoukaku.getNode();
     if (!node) return;
 
-    // checks if url is valid
-    // new URL(phrase);
+    console.log(isURL(phrase));
 
     let result = await node.rest.resolve(phrase);
 
