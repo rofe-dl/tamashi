@@ -3,8 +3,9 @@ const { Client, GatewayIntentBits, Collection, Events } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');
 const { Shoukaku, Connectors } = require('shoukaku');
-const Errors = require('./utils/errors');
+const Errors = require('./utils/enums/errors');
 const { logError } = require('./utils/errorlogger');
+const SpotifyBotAPI = require('./api/spotify/botAPI');
 
 require('dotenv').config({ path: 'config.env' });
 BOT_TOKEN = process.env.BOT_TOKEN;
@@ -115,7 +116,7 @@ function initCommands(client) {
   });
 }
 
-function initClient(client) {
+async function initClient(client) {
   console.log('Initializing the client...');
   client.on('ready', () => {
     // TODO activity setting doesn't work, look into it
@@ -126,11 +127,12 @@ function initClient(client) {
       }
     );
 
-    console.log('BBDeebot is online!');
+    console.log('Tamashi is online!');
   });
 
   initCommands(client);
   initShoukaku(client);
+  await SpotifyBotAPI.generateToken();
 
   client.login(BOT_TOKEN);
 }
@@ -146,4 +148,6 @@ const client = new Client({
   ],
 });
 
-initClient(client);
+(async () => {
+  await initClient(client);
+})();

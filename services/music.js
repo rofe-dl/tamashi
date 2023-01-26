@@ -1,11 +1,15 @@
-const Errors = require('../utils/errors');
-const Replies = require('../utils/replies');
+const Errors = require('../utils/enums/errors');
+const Replies = require('../utils/enums/replies');
 const { logError } = require('../utils/errorlogger');
 const { isURL } = require('../utils/regex');
+const SpotifyBotAPI = require('../api/spotify/botAPI');
+const { PLAY_FROM, phraseHasFlag } = require('../utils/enums/commandflags');
 
 module.exports.play = async (message, client, phrase) => {
-  // todo if search phrases are given, find spotify, deezer or apple music link first
   // todo pause and play buttons
+  // todo rate limiting the api
+  // todo command to set default source
+  // todo queue feature
   try {
     if (!message.member.voice.channel) {
       return await message.reply(Errors.USER_NOT_IN_VOICE);
@@ -15,16 +19,24 @@ module.exports.play = async (message, client, phrase) => {
     const node = client.shoukaku.getNode();
     if (!node) return;
 
-    console.log(isURL(phrase));
+    let result;
+    const flag = phraseHasFlag(phrase);
 
-    let result = await node.rest.resolve(phrase);
+    if (!isURL(phrase) && flag) {
+      phrase = phrase.replace(flag, '');
+      result = await manualResolve(phrase, flag, node);
+    }
 
-    if (!result?.tracks.length) {
-      // do a youtube search if song isn't found in streaming service
+    if (!result?.tracks?.length) {
+      result = await node.rest.resolve(phrase);
+    }
+
+    if (!result?.tracks?.length) {
+      // do a youtube search if song isn't found in any streaming service
       phrase = 'ytsearch: ' + phrase;
       result = await node.rest.resolve(phrase);
 
-      if (!result?.tracks.length) {
+      if (!result?.tracks?.length) {
         return await message.reply(Replies.SONG_NOT_FOUND);
       }
     }
@@ -51,3 +63,12 @@ module.exports.play = async (message, client, phrase) => {
     logError(error);
   }
 };
+
+async function manualResolve(phrase, flag, node) {
+  if (flag === PLAY_FROM.SPOTIFY)
+    phrase = await SpotifyBotAPI.getSpotifyLink(phrase);
+  else if (flag === PLAY_FROM.SOUNDCLOUD) phrase = 'scsearch:' + phrase;
+  else if (flag === PLAY_FROM.YOUTUBE) phrase = 'ytsearch:' + phrase;
+
+  if (phrase) return await node.rest.resolve(phrase);
+}
