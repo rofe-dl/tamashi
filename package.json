@@ -1,7 +1,7 @@
 {
-  "name": "bbdeebot",
+  "name": "zatsuon",
   "version": "1.0.0",
-  "description": "A Discord bot to play a user's currently playing Spotify track",
+  "description": "A Discord bot primarily for music but will also support other misc. features",
   "main": "index.js",
   "scripts": {
     "start": "nodemon index.js",
@@ -9,9 +9,10 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Rafidul",
-  "license": "MIT",
+  "license": "GNU GPLV3",
   "dependencies": {
     "@discordjs/opus": "^0.8.0",
+    "axios": "^1.2.4",
     "discord.js": "^14.7.1",
     "dotenv": "^16.0.3",
     "fs-extra": "^11.1.0",
