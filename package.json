@@ -15,8 +15,6 @@
     "discord.js": "^14.7.1",
     "dotenv": "^16.0.3",
     "fs-extra": "^11.1.0",
-    "kazagumo": "^2.3.2",
-    "kazagumo-spotify": "^1.1.5",
     "nodemon": "^2.0.20",
     "shoukaku": "^3.3.1"
   }

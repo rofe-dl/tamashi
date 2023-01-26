@@ -3,8 +3,6 @@ const { Client, GatewayIntentBits, Collection, Events } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');
 const { Shoukaku, Connectors } = require('shoukaku');
-const { Kazagumo } = require('kazagumo');
-const Spotify = require('kazagumo-spotify');
 const Errors = require('./utils/errors');
 const { logError } = require('./utils/errorlogger');
 
