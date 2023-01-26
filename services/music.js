@@ -10,6 +10,7 @@ module.exports.play = async (message, client, phrase) => {
   // todo rate limiting the api
   // todo command to set default source
   // todo queue feature
+  // todo help command
   try {
     if (!message.member.voice.channel) {
       return await message.reply(Errors.USER_NOT_IN_VOICE);
