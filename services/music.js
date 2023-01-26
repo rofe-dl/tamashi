@@ -1,8 +1,9 @@
 const Errors = require('../utils/errors');
+const Replies = require('../utils/replies');
 const { logError } = require('../utils/errorlogger');
 
 module.exports.play = async (message, client, phrase) => {
-  // TODO check if artist and song title match, otherwise do youtube
+  // todo if search phrases are given, find spotify, deezer or apple music link first
   try {
     if (!message.member.voice.channel) {
       return await message.reply(Errors.USER_NOT_IN_VOICE);
@@ -12,14 +13,20 @@ module.exports.play = async (message, client, phrase) => {
     const node = client.shoukaku.getNode();
     if (!node) return;
 
-    phrase = 'ytsearch: ' + phrase;
-
     // checks if url is valid
     // new URL(phrase);
 
-    const result = await node.rest.resolve(phrase);
+    let result = await node.rest.resolve(phrase);
 
-    if (!result?.tracks.length) return;
+    if (!result?.tracks.length) {
+      // do a youtube search if song isn't found in streaming service
+      phrase = 'ytsearch: ' + phrase;
+      result = await node.rest.resolve(phrase);
+
+      if (!result?.tracks.length) {
+        return await message.reply(Replies.SONG_NOT_FOUND);
+      }
+    }
 
     const metadata = result.tracks.shift();
 
@@ -31,10 +38,11 @@ module.exports.play = async (message, client, phrase) => {
       deaf: true,
     });
 
-    await message.reply({
-      content: 'Playing the song you requested.',
-    });
     player.playTrack({ track: metadata.track }).setVolume(0.75);
+
+    await message.reply({
+      content: `Now playing \`${metadata.info.title}\` by \`${metadata.info.author}\`.\n${metadata.info.uri}`,
+    });
   } catch (error) {
     await message.reply({
       content: Errors.FRIENDLY_ERROR_MESSAGE,
