@@ -37,12 +37,16 @@ module.exports = {
     };
 
     try {
-      let response = await axios.get(searchURL, options);
+      let response;
 
-      // if token expired, regenerate and try again
-      if (response.status !== 200) {
-        await this.generateToken();
+      try {
         response = await axios.get(searchURL, options);
+      } catch (error) {
+        if (error?.response?.status === 401) {
+          await this.generateToken();
+          options.headers['Authorization'] = `Bearer ${this.token}`;
+          response = await axios.get(searchURL, options);
+        }
       }
 
       data = response.data;
