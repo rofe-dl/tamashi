@@ -4,7 +4,8 @@
   "description": "A Discord bot primarily for music but will also support other misc. features",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js",
+    "start:dev": "NODE_ENV=dev nodemon index.js",
+    "start:prod": "NODE_ENV=prod nodemon index.js",
     "deploycommands": "node deploy-commands-globally.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -16,6 +17,7 @@
     "discord.js": "^14.7.1",
     "dotenv": "^16.0.3",
     "fs-extra": "^11.1.0",
+    "mongoose": "^6.9.0",
     "nodemon": "^2.0.20",
     "shoukaku": "^3.3.1"
   }

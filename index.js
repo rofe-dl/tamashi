@@ -6,13 +6,14 @@ const { Shoukaku, Connectors } = require('shoukaku');
 const Errors = require('./utils/enums/errors');
 const { logError } = require('./utils/errorlogger');
 const SpotifyBotAPI = require('./api/spotify/botAPI');
+const mongoose = require('mongoose');
 
 require('dotenv').config({ path: 'config.env' });
 BOT_TOKEN = process.env.BOT_TOKEN;
 PREFIX = `>>`;
 
 function initShoukaku(client) {
-  console.log('Connecting to the Lavalink server...');
+  process.stdout.write('Connecting to the Lavalink server...');
   // lavalink setup
   const Nodes = [
     {
@@ -26,7 +27,7 @@ function initShoukaku(client) {
 
   shoukaku.on('error', (_, error) => logError(error));
   client.shoukaku = shoukaku;
-  console.log('Connected!...');
+  console.log('Connected!');
 }
 
 function initCommands(client) {
@@ -116,6 +117,17 @@ function initCommands(client) {
   });
 }
 
+async function initDatabase() {
+  process.stdout.write('Connecting to database...');
+  mongoose.set('strictQuery', true); // to suppress warning
+  try {
+    await mongoose.connect(process.env.MONGODB_URL);
+    console.log('Connected!');
+  } catch {
+    logError('Could not connect to database!');
+  }
+}
+
 async function initClient(client) {
   console.log('Initializing the client...');
   client.on('ready', () => {
@@ -127,12 +139,13 @@ async function initClient(client) {
       }
     );
 
-    console.log('Tamashi is online!');
+    console.log('\nTamashi is ONLINE!');
   });
 
   initCommands(client);
   initShoukaku(client);
-  await SpotifyBotAPI.generateToken();
+  initDatabase();
+  // await SpotifyBotAPI.generateToken();
 
   client.login(BOT_TOKEN);
 }
