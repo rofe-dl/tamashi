@@ -36,23 +36,19 @@ module.exports = {
       },
     };
 
+    let response;
+
     try {
-      let response;
-
-      try {
-        response = await axios.get(searchURL, options);
-      } catch (error) {
-        if (error?.response?.status === 401) {
-          await this.generateToken();
-          options.headers['Authorization'] = `Bearer ${this.token}`;
-          response = await axios.get(searchURL, options);
-        }
-      }
-
-      data = response.data;
-      return data?.tracks?.items[0]?.external_urls?.spotify;
+      response = await axios.get(searchURL, options);
     } catch (error) {
-      logError(error);
+      if (error?.response?.status === 401) {
+        await this.generateToken();
+        options.headers['Authorization'] = `Bearer ${this.token}`;
+        response = await axios.get(searchURL, options);
+      }
     }
+
+    data = response.data;
+    return data?.tracks?.items[0]?.external_urls?.spotify;
   },
 };

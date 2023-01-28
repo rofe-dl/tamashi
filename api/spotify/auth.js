@@ -24,15 +24,11 @@ function getHeaders() {
 module.exports.authorizeBot = async () => {
   const data = qs.stringify({ grant_type: 'client_credentials' });
 
-  try {
-    const { data: response } = await axios.post(`${URL}/api/token`, data, {
-      headers: getHeaders(),
-    });
+  const { data: response } = await axios.post(`${URL}/api/token`, data, {
+    headers: getHeaders(),
+  });
 
-    return response;
-  } catch (error) {
-    logError(error);
-  }
+  return response;
 };
 
 module.exports.userAuthorizeBot = async (userHandle) => {
@@ -66,15 +62,11 @@ module.exports.authorizeUser = async (userHandle, code) => {
     redirect_uri,
   });
 
-  try {
-    const { data: response } = await axios.post(`${URL}/api/token`, data, {
-      headers: getHeaders(),
-    });
+  const { data: response } = await axios.post(`${URL}/api/token`, data, {
+    headers: getHeaders(),
+  });
 
-    return response;
-  } catch (error) {
-    logError(error);
-  }
+  return response;
 };
 
 module.exports.reAuthorizeUser = async (refreshToken) => {
