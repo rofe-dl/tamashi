@@ -10,7 +10,7 @@ module.exports.play = async (message, client, phrase) => {
   // todo rate limiting the api
   // todo make parallel spotify requests for each user
   // todo keep in memory of who is being followed
-  // todo stop following on disconnect
+  // todo stop following on disconnect, dont follow if not in vc
   // todo check if app has been removed by user
   // todo queue feature
   // todo help command
