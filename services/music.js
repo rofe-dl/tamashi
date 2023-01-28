@@ -8,9 +8,13 @@ const { PLAY_FROM, phraseHasFlag } = require('../utils/enums/commandflags');
 module.exports.play = async (message, client, phrase) => {
   // todo pause and play buttons
   // todo rate limiting the api
-  // todo command to set default source
+  // todo make parallel spotify requests for each user
+  // todo keep in memory of who is being followed
+  // todo stop following on disconnect
+  // todo check if app has been removed by user
   // todo queue feature
   // todo help command
+  // todo write setup about lavalink, deploy-commands, ngrok
   try {
     if (!message.member.voice.channel) {
       return await message.reply(Errors.USER_NOT_IN_VOICE);

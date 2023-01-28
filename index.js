@@ -117,6 +117,10 @@ function initCommands(client) {
   });
 }
 
+async function initServer() {
+  require('./server/index');
+}
+
 async function initDatabase() {
   process.stdout.write('Connecting to database...');
   mongoose.set('strictQuery', true); // to suppress warning
@@ -144,7 +148,8 @@ async function initClient(client) {
 
   initCommands(client);
   initShoukaku(client);
-  initDatabase();
+  await initDatabase();
+  await initServer();
   // await SpotifyBotAPI.generateToken();
 
   client.login(BOT_TOKEN);
