@@ -8,6 +8,7 @@ const { logError } = require('./utils/errorlogger');
 const { SpotifyBotAPI } = require('./api/spotify/botAPI');
 const mongoose = require('mongoose');
 const redis = require('redis');
+const RedisCache = require('./utils/redisCache');
 
 require('dotenv').config({ path: 'config.env' });
 BOT_TOKEN = process.env.BOT_TOKEN;
@@ -166,7 +167,7 @@ async function initClient(client) {
   initCommands(client);
   initShoukaku(client);
   await initDatabase();
-  client.redis = await initRedis();
+  client.redis = new RedisCache(await initRedis());
   await initServer();
 
   // todo uncomment before deploy

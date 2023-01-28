@@ -1,5 +1,4 @@
 require('dotenv').config({ path: 'config.env' });
-const { logError } = require('../../utils/errorlogger');
 const axios = require('axios');
 const qs = require('querystring');
 const { generateRandomString } = require('../../utils/random');

@@ -9,65 +9,58 @@ module.exports.play = async (message, client, phrase) => {
   // todo pause and play buttons
   // todo rate limiting the api
   // todo make parallel spotify requests for each user
-  // todo keep in memory of who is being followed
-  // todo stop following on disconnect, dont follow if not in vc
-  // todo check if app has been removed by user
+  // todo stop following on disconnect
   // todo queue feature
   // todo help command
   // todo write setup about lavalink, deploy-commands, ngrok, redis
-  // todo clear all redis on server start
-  try {
-    if (!message.member.voice.channel) {
-      return await message.reply(Errors.USER_NOT_IN_VOICE);
-    } else if (phrase.trim().length === 0)
-      return await message.reply(Errors.SEARCH_TERM_EMPTY);
+  // todo use deleteme command to reauthorize if removed access
+  // todo what happens if song change while in different channel
+  // todo what happens if change followme without stopfollowme command
 
-    const node = client.shoukaku.getNode();
-    if (!node) return;
+  if (!message.member.voice.channel) {
+    return await message.reply(Errors.USER_NOT_IN_VOICE);
+  } else if (phrase.trim().length === 0)
+    return await message.reply(Errors.SEARCH_TERM_EMPTY);
 
-    let result;
-    const flag = phraseHasFlag(phrase);
+  const node = client.shoukaku.getNode();
 
-    if (!isURL(phrase) && flag) {
-      phrase = phrase.replace(flag, '');
-      result = await manualResolve(phrase, flag, node);
-    }
+  let result;
+  const flag = phraseHasFlag(phrase);
 
-    if (!result?.tracks?.length) {
-      result = await node.rest.resolve(phrase);
-    }
-
-    if (!result?.tracks?.length) {
-      // do a youtube search if song isn't found in any streaming service
-      phrase = 'ytsearch: ' + phrase;
-      result = await node.rest.resolve(phrase);
-
-      if (!result?.tracks?.length) {
-        return await message.reply(Replies.SONG_NOT_FOUND);
-      }
-    }
-
-    const metadata = result.tracks.shift();
-
-    await node.leaveChannel(message.guild.id);
-    const player = await node.joinChannel({
-      guildId: message.guild.id,
-      channelId: message.member.voice.channelId,
-      shardId: 0, // if unsharded it will always be zero (depending on your library implementation),
-      deaf: true,
-    });
-
-    player.playTrack({ track: metadata.track }).setVolume(0.75);
-
-    await message.reply({
-      content: `Now playing \`${metadata.info.title}\` by \`${metadata.info.author}\`.\n${metadata.info.uri}`,
-    });
-  } catch (error) {
-    await message.reply({
-      content: Errors.FRIENDLY_ERROR_MESSAGE,
-    });
-    logError(error);
+  if (!isURL(phrase) && flag) {
+    phrase = phrase.replace(flag, '');
+    result = await manualResolve(phrase, flag, node);
   }
+
+  if (!result?.tracks?.length) {
+    result = await node.rest.resolve(phrase);
+  }
+
+  if (!result?.tracks?.length) {
+    // do a youtube search if song isn't found in any streaming service
+    phrase = 'ytsearch: ' + phrase;
+    result = await node.rest.resolve(phrase);
+
+    if (!result?.tracks?.length) {
+      return await message.reply(Replies.SONG_NOT_FOUND);
+    }
+  }
+
+  const metadata = result.tracks.shift();
+
+  await node.leaveChannel(message.guild.id);
+  const player = await node.joinChannel({
+    guildId: message.guild.id,
+    channelId: message.member.voice.channelId,
+    shardId: 0, // if unsharded it will always be zero (depending on your library implementation),
+    deaf: true,
+  });
+
+  player.playTrack({ track: metadata.track }).setVolume(0.75);
+
+  await message.reply({
+    content: `Now playing \`${metadata.info.title}\` by \`${metadata.info.author}\`.\n${metadata.info.uri}`,
+  });
 };
 
 async function manualResolve(phrase, flag, node) {

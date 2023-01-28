@@ -1,6 +1,7 @@
 const Errors = require('../utils/enums/errors');
 const { SlashCommandBuilder } = require('discord.js');
 const music = require('../services/music');
+const { logError } = require('../utils/errorlogger');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -17,15 +18,29 @@ module.exports = {
 
   // used by official slash commands
   async execute(interaction) {
-    await music.play(
-      interaction,
-      interaction.client,
-      interaction.options.getString('phrase')
-    );
+    try {
+      await music.play(
+        interaction,
+        interaction.client,
+        interaction.options.getString('phrase')
+      );
+    } catch (error) {
+      await message.reply({
+        content: Errors.FRIENDLY_ERROR_MESSAGE,
+      });
+      logError(error);
+    }
   },
 
   // used by prefix commands
   async executedFromPrefix(message, client, args) {
-    await music.play(message, client, args);
+    try {
+      await music.play(message, client, args);
+    } catch (error) {
+      await message.reply({
+        content: Errors.FRIENDLY_ERROR_MESSAGE,
+      });
+      logError(error);
+    }
   },
 };

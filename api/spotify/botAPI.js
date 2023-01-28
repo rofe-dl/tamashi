@@ -1,6 +1,5 @@
 require('dotenv').config({ path: 'config.env' });
 const auth = require('./auth');
-const { logError } = require('../../utils/errorlogger');
 const axios = require('axios');
 const datetime = new Date();
 
@@ -48,7 +47,7 @@ module.exports.SpotifyBotAPI = {
       }
     }
 
-    data = response.data;
+    const data = response.data;
     return data?.tracks?.items[0]?.external_urls?.spotify;
   },
 };
