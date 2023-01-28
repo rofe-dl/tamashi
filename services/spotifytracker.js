@@ -1,8 +1,9 @@
 const Errors = require('../utils/enums/errors');
 const Replies = require('../utils/enums/replies');
 const { logError } = require('../utils/errorlogger');
-const { userAuthorizeBot } = require('../api/spotify/auth');
+const { userAuthorizeBot, reAuthorizeUser } = require('../api/spotify/auth');
 const UserServices = require('../repository/user.services');
+const { UserAPI, currentlyFollowing } = require('../api/spotify/userAPI');
 
 module.exports.followUser = async (message, client) => {
   // .author for interactions from slash commands, .user is from prefixes
@@ -19,6 +20,12 @@ module.exports.followUser = async (message, client) => {
       ephemeral: true,
     });
   }
+
+  const { access_token: accessToken } = await reAuthorizeUser(
+    userInDB.refreshToken
+  );
+
+  currentlyFollowing.add(userHandle, accessToken, message.guildId);
 
   await message.reply({
     content: 'Following ' + user?.toString() + "'s Spotify now!",

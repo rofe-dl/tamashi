@@ -75,13 +75,9 @@ module.exports.reAuthorizeUser = async (refreshToken) => {
     refresh_token: refreshToken,
   });
 
-  try {
-    const { data: response } = await axios.post(`${URL}/api/token`, data, {
-      headers: getHeaders(),
-    });
+  const { data: response } = await axios.post(`${URL}/api/token`, data, {
+    headers: getHeaders(),
+  });
 
-    return response;
-  } catch (error) {
-    logError(error);
-  }
+  return response;
 };

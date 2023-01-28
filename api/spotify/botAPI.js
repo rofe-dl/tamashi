@@ -6,7 +6,7 @@ const datetime = new Date();
 
 const URL = 'https://api.spotify.com/v1';
 
-module.exports = {
+module.exports.SpotifyBotAPI = {
   token: 'NONE',
 
   async generateToken() {

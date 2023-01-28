@@ -28,6 +28,7 @@ app.get('/', (req, res) => {
   res.json('Testing ngrok');
 });
 
-app.listen(process.env.SERVER_PORT, () => {
+(async () => {
+  await app.listen(process.env.SERVER_PORT);
   console.log(`Server running on port ${process.env.SERVER_PORT}...`);
-});
+})();

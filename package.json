@@ -20,6 +20,7 @@
     "fs-extra": "^11.1.0",
     "mongoose": "^6.9.0",
     "nodemon": "^2.0.20",
+    "redis": "^4.6.2",
     "shoukaku": "^3.3.1"
   }
 }

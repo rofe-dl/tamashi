@@ -5,8 +5,9 @@ const path = require('node:path');
 const { Shoukaku, Connectors } = require('shoukaku');
 const Errors = require('./utils/enums/errors');
 const { logError } = require('./utils/errorlogger');
-const SpotifyBotAPI = require('./api/spotify/botAPI');
+const { SpotifyBotAPI } = require('./api/spotify/botAPI');
 const mongoose = require('mongoose');
+const redis = require('redis');
 
 require('dotenv').config({ path: 'config.env' });
 BOT_TOKEN = process.env.BOT_TOKEN;
@@ -121,8 +122,24 @@ async function initServer() {
   require('./server/index');
 }
 
+async function initRedis() {
+  const redisClient = redis.createClient({
+    url: 'redis://' + process.env.REDIS_URL,
+  });
+
+  redisClient.on('error', (err) => logError(err));
+
+  process.stdout.write('Connecting to the Redis server...');
+  await redisClient.connect();
+  await redisClient.flushAll();
+
+  console.log('Connected & Flushed!');
+
+  return redisClient;
+}
+
 async function initDatabase() {
-  process.stdout.write('Connecting to database...');
+  process.stdout.write('Connecting to MongoDB...');
   mongoose.set('strictQuery', true); // to suppress warning
   try {
     await mongoose.connect(process.env.MONGODB_URL);
@@ -149,7 +166,10 @@ async function initClient(client) {
   initCommands(client);
   initShoukaku(client);
   await initDatabase();
+  client.redis = await initRedis();
   await initServer();
+
+  // todo uncomment before deploy
   // await SpotifyBotAPI.generateToken();
 
   client.login(BOT_TOKEN);

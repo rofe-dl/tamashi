@@ -2,7 +2,7 @@ const Errors = require('../utils/enums/errors');
 const Replies = require('../utils/enums/replies');
 const { logError } = require('../utils/errorlogger');
 const { isURL } = require('../utils/regex');
-const SpotifyBotAPI = require('../api/spotify/botAPI');
+const { SpotifyBotAPI } = require('../api/spotify/botAPI');
 const { PLAY_FROM, phraseHasFlag } = require('../utils/enums/commandflags');
 
 module.exports.play = async (message, client, phrase) => {
@@ -14,7 +14,8 @@ module.exports.play = async (message, client, phrase) => {
   // todo check if app has been removed by user
   // todo queue feature
   // todo help command
-  // todo write setup about lavalink, deploy-commands, ngrok
+  // todo write setup about lavalink, deploy-commands, ngrok, redis
+  // todo clear all redis on server start
   try {
     if (!message.member.voice.channel) {
       return await message.reply(Errors.USER_NOT_IN_VOICE);
