@@ -1,19 +1,17 @@
 const Errors = require('../utils/enums/errors');
 const { SlashCommandBuilder } = require('discord.js');
-const FollowmeService = require('../services/followme');
+const UnfollowService = require('../services/unfollow');
 const { logError } = require('../utils/errorlogger');
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('followme')
-    .setDescription(
-      "Makes the bot track what you're currently playing on Spotify!"
-    ),
+    .setName('unfollow')
+    .setDescription("Makes the bot stop tracking the current user's Spotify."),
 
   // used by official slash commands
   async execute(interaction) {
     try {
-      await FollowmeService.followUser(interaction, interaction.client);
+      await UnfollowService.unfollow(interaction, interaction.client);
     } catch (error) {
       await message.reply({
         content: Errors.FRIENDLY_ERROR_MESSAGE,
@@ -25,7 +23,7 @@ module.exports = {
   // used by prefix commands
   async executedFromPrefix(message, client, args) {
     try {
-      await FollowmeService.followUser(message, client);
+      await UnfollowService.unfollow(message, client);
     } catch (error) {
       await message.reply({
         content: Errors.FRIENDLY_ERROR_MESSAGE,
