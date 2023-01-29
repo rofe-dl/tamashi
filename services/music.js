@@ -8,7 +8,6 @@ const { PLAY_FROM, phraseHasFlag } = require('../utils/enums/commandflags');
 module.exports.play = async (message, client, phrase) => {
   // todo pause and play buttons
   // todo rate limiting the api
-  // todo make parallel spotify requests for each user
   // todo stop following on disconnect
   // todo queue feature
   // todo help command
@@ -16,6 +15,7 @@ module.exports.play = async (message, client, phrase) => {
   // todo use deleteme command to reauthorize if removed access
   // todo what happens if song change while in different channel
   // todo what happens if change followme without stopfollowme command
+  // todo have a common play method that handles no track found or no media url resolved
 
   if (!message.member.voice.channel) {
     return await message.reply(Errors.USER_NOT_IN_VOICE);

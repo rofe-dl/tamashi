@@ -7,8 +7,8 @@ module.exports = class RedisCache {
     await this.redisClient.hSet(key, value);
   }
 
-  async updateAllCurrentlyPlaying() {
-    // await this.redis.hGetAll();
+  async getCurrentlyFollowing(key) {
+    return await this.redisClient.hGetAll(key);
   }
 
   async updateToken(updatedToken, guildID) {
