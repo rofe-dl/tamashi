@@ -20,10 +20,11 @@ module.exports.logError = (error, writeToFile = true) => {
         ' on ' +
         datetime.toDateString() +
         '\n\n' +
-        util.format('ERROR: ' + error) +
+        util.format(error) +
         '\n\n====================================================\n\n'
     );
   }
 
-  console.error('ERROR: ' + error);
+  console.log('ERROR:');
+  console.error(error);
 };
