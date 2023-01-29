@@ -3,8 +3,8 @@ const Replies = require('../utils/enums/replies');
 const { userAuthorizeBot, reAuthorizeUser } = require('../api/spotify/auth');
 const UserServices = require('../repository/user.services');
 const { UserAPI } = require('../api/spotify/userAPI');
-const RedisCache = require('../utils/redisCache');
 const { logError } = require('../utils/errorlogger');
+const MusicPlayer = require('./core/musicplayer');
 
 module.exports.followUser = async (message, client) => {
   if (!message.member.voice.channel) {
@@ -50,7 +50,7 @@ module.exports.followUser = async (message, client) => {
   const { trackURL, oAuthToken: updatedToken } =
     await UserAPI.getCurrentlyPlaying(accessToken, refreshToken);
 
-  if (trackURL) await play(message, client, trackURL);
+  if (trackURL) await _play(message, client, trackURL);
 
   if (updatedToken !== accessToken)
     await client.redis.updateToken(updatedToken, guildID);
@@ -86,7 +86,7 @@ module.exports.followUser = async (message, client) => {
           if (response?.trackURL !== value.trackURL) {
             value.trackURL = response.trackURL ?? '';
             client.redis.addCurrentlyFollowing(guild, value);
-            if (value.trackURL) await play(message, client, value.trackURL);
+            if (value.trackURL) await _play(message, client, value.trackURL);
           }
         })
         .catch((err) => logError(err));
@@ -96,49 +96,23 @@ module.exports.followUser = async (message, client) => {
   await client.redis.addCurrentlyFollowing(redisKey, redisValue);
 };
 
-async function play(message, client, trackURL) {
+async function _play(message, client, trackURL) {
   const node = client.shoukaku.getNode();
+  const player = new MusicPlayer(client, node);
+  const result = await player.resolve(trackURL);
+  const metadata = result.tracks[0];
 
-  let result = await node.rest.resolve(trackURL);
+  if (!result?.tracks?.length) {
+    return await client.channels.cache
+      .get(message.channelId)
+      .send(Replies.SONG_NOT_FOUND);
+  }
 
-  let metadata = result.tracks.shift();
-
-  await node.leaveChannel(message.guild.id);
-  let player = await node.joinChannel({
-    guildId: message.guild.id,
-    channelId: message.member.voice.channelId,
-    shardId: 0, // if unsharded it will always be zero (depending on your library implementation),
-    deaf: true,
-  });
-
-  // some spotify direct urls don't work, so then resort to youtube
-  player.on('exception', async () => {
-    result = await node.rest.resolve(
-      'ytsearch:' +
-        metadata.info.title.toLowerCase() +
-        ' ' +
-        metadata.info.author.toLowerCase() +
-        ' lyrics'
-    );
-
-    metadata = result.tracks.shift();
-
-    await node.leaveChannel(message.guild.id);
-    player = await node.joinChannel({
-      guildId: message.guild.id,
-      channelId: message.member.voice.channelId,
-      shardId: 0, // if unsharded it will always be zero (depending on your library implementation),
-      deaf: true,
-    });
-
-    player.playTrack({ track: metadata.track }).setVolume(0.75);
-  });
+  await player.play(result, message);
 
   await client.channels.cache
     .get(message.channelId)
     .send(
       `Now playing \`${metadata.info.title}\` by \`${metadata.info.author}\`.\n${metadata.info.uri}`
     );
-
-  player.playTrack({ track: metadata.track }).setVolume(0.75);
 }

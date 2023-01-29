@@ -42,8 +42,8 @@ module.exports.userAuthorizeBot = async (userHandle) => {
     redirect_uri,
     state: userHandle + '-' + generateRandomString(16),
     scope: SCOPE,
-    // todo change show dialog to false later
-    show_dialog: true,
+    // doesnt show the prompt if already authorized, direct callback
+    show_dialog: false,
   });
 
   return `${URL}/authorize?${data}`;
