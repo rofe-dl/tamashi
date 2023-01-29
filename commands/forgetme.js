@@ -1,29 +1,19 @@
 const Errors = require('../utils/enums/errors');
 const { SlashCommandBuilder } = require('discord.js');
-const PlayService = require('../services/play');
+const ForgetMeService = require('../services/forgetme');
 const { logError } = require('../utils/errorlogger');
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('play')
+    .setName('forgetme')
     .setDescription(
-      'Play a song using a search phrase. Spotify, Deezer, Apple Music and YouTube links are also valid!'
-    )
-    .addStringOption((option) =>
-      option
-        .setName('phrase')
-        .setDescription('Name of the song and artist')
-        .setRequired(true)
+      'Makes the bot forget your data so you can reauthorize it to access your Spotify again !'
     ),
 
   // used by official slash commands
   async execute(interaction) {
     try {
-      await PlayService.play(
-        interaction,
-        interaction.client,
-        interaction.options.getString('phrase')
-      );
+      await ForgetMeService.forgetMe(interaction, interaction.client);
     } catch (error) {
       await message.reply({
         content: Errors.FRIENDLY_ERROR_MESSAGE,
@@ -35,7 +25,7 @@ module.exports = {
   // used by prefix commands
   async executedFromPrefix(message, client, args) {
     try {
-      await PlayService.play(message, client, args);
+      await ForgetMeService.forgetMe(message, client);
     } catch (error) {
       await message.reply({
         content: Errors.FRIENDLY_ERROR_MESSAGE,

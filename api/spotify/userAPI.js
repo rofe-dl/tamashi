@@ -33,6 +33,7 @@ module.exports.UserAPI = {
       }
     }
 
+    // returns song url and also the oAuthToken in case it was refreshed
     return {
       trackURL: response?.data?.item?.external_urls?.spotify,
       oAuthToken,

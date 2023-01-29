@@ -12,7 +12,7 @@ module.exports.play = async (message, client, phrase) => {
   // todo queue feature
   // todo help command
   // todo write setup about lavalink, deploy-commands, ngrok, redis
-  // todo use deleteme command to reauthorize if removed access
+  // todo use forgetme command to reauthorize if removed access
   // todo what happens if song change while in different channel
   // todo what happens if change followme without stopfollowme command
   // todo have a common play method that handles no track found or no media url resolved

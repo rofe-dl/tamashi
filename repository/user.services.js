@@ -10,5 +10,5 @@ module.exports.getUser = async (userHandle) => {
 };
 
 module.exports.deleteUser = async (userHandle) => {
-  await User.findOneAndDelete({ userHandle });
+  return await User.findOneAndDelete({ userHandle });
 };

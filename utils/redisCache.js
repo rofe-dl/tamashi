@@ -17,4 +17,9 @@ module.exports = class RedisCache {
 
     await this.redisClient.hSet(guildID, value);
   }
+
+  async deleteCurrentlyFollowing(key, userHandle) {
+    const value = await this.redisClient.hGetAll(key);
+    if (value?.userHandle === userHandle) await this.redisClient.del(key);
+  }
 };

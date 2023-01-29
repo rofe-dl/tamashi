@@ -30,7 +30,18 @@ module.exports.followUser = async (message, client) => {
   // todo check if already following this user
 
   const refreshToken = userInDB.refreshToken;
-  const { access_token: accessToken } = await reAuthorizeUser(refreshToken);
+
+  let accessToken;
+
+  try {
+    const { access_token } = await reAuthorizeUser(refreshToken);
+    accessToken = access_token;
+  } catch (err) {
+    if (err.response?.data?.error === 'invalid_grant')
+      return await message.reply({
+        content: Replies.ACCESS_REVOKED,
+      });
+  }
 
   await message.reply({
     content: 'Following ' + user?.toString() + "'s Spotify now!",
@@ -53,19 +64,25 @@ module.exports.followUser = async (message, client) => {
     trackURL: trackURL ?? '',
   };
 
+  // updates the song currently being played by each user being followed
+  // happens every 3 secs
   setInterval(async () => {
+    // iterate over all servers bot has joined
     for (let guild of client.guilds.cache.keys()) {
       let value = await client.redis.getCurrentlyFollowing(guild);
       if (!value.accessToken || !value.refreshToken) continue;
 
+      // parallel calls to Spotify API for every user
       UserAPI.getCurrentlyPlaying(value.accessToken, value.refreshToken)
         .then(async (response) => {
+          // updated token received so update entry in redis
           if (response?.oAuthToken !== value.accessToken) {
             client.redis
               .updateToken(response.oAuthToken, guild)
               .catch((err) => logError(err));
           }
 
+          // song changed
           if (response?.trackURL !== value.trackURL) {
             value.trackURL = response.trackURL ?? '';
             client.redis.addCurrentlyFollowing(guild, value);
