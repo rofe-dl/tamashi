@@ -1,29 +1,17 @@
 const Errors = require('../utils/enums/errors');
 const { SlashCommandBuilder } = require('discord.js');
-const PlayService = require('../services/play');
+const HelpService = require('../services/help');
 const { logError } = require('../utils/errorlogger');
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('play')
-    .setDescription(
-      'Play a song using a search phrase or URL. To specify a source, use -flags before the phrase.'
-    )
-    .addStringOption((option) =>
-      option
-        .setName('phrase')
-        .setDescription('Name of the song and artist')
-        .setRequired(true)
-    ),
+    .setName('help')
+    .setDescription('Shows all the commands available'),
 
   // used by official slash commands
   async execute(interaction) {
     try {
-      await PlayService.play(
-        interaction,
-        interaction.client,
-        interaction.options.getString('phrase')
-      );
+      await HelpService.printCommands(interaction, interaction.client);
     } catch (error) {
       await message.reply({
         content: Errors.FRIENDLY_ERROR_MESSAGE,
@@ -35,7 +23,7 @@ module.exports = {
   // used by prefix commands
   async executedFromPrefix(message, client, args) {
     try {
-      await PlayService.play(message, client, args);
+      await HelpService.printCommands(message, client);
     } catch (error) {
       await message.reply({
         content: Errors.FRIENDLY_ERROR_MESSAGE,

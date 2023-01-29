@@ -21,7 +21,6 @@ TODO:
 1. Help Command
 1. Start updating currently following right on server start
 1. Stop following on disconnect
-1. Unfollow command
 1. Dont follow users bot is already following
 1. Pause and Play buttons
 1. Rate limiting on Spotify Bot API
