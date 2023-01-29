@@ -13,7 +13,7 @@ module.exports = {
     try {
       await UnfollowService.unfollow(interaction, interaction.client);
     } catch (error) {
-      await message.reply({
+      await interaction.reply({
         content: Errors.FRIENDLY_ERROR_MESSAGE,
       });
       logError(error);

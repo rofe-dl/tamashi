@@ -25,7 +25,7 @@ module.exports = {
         interaction.options.getString('phrase')
       );
     } catch (error) {
-      await message.reply({
+      await interaction.reply({
         content: Errors.FRIENDLY_ERROR_MESSAGE,
       });
       logError(error);

@@ -15,7 +15,7 @@ module.exports = {
     try {
       await ForgetMeService.forgetMe(interaction, interaction.client);
     } catch (error) {
-      await message.reply({
+      await interaction.reply({
         content: Errors.FRIENDLY_ERROR_MESSAGE,
       });
       logError(error);
