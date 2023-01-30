@@ -16,8 +16,7 @@ discord.js
 
 TODO:
 
-1. Pause command
-1. Fix cut off at the end
+1. Pause, Stop and Play command
 1. Start updating currently following right on server start
 1. Pause and Play buttons
 1. Rate limiting on Spotify Bot API
