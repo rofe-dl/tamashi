@@ -37,6 +37,8 @@ module.exports.UserAPI = {
     return {
       trackURL: response?.data?.item?.external_urls?.spotify,
       oAuthToken,
+      progressMs: response?.data?.progress_ms,
+      durationMs: response?.data?.item?.duration_ms,
     };
   },
 };

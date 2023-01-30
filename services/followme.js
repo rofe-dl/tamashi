@@ -82,11 +82,16 @@ module.exports.followUser = async (message, client) => {
               .catch((err) => logError(err));
           }
 
+          const { progressMs, durationMs } = response;
+
           // song changed
           if (response?.trackURL !== value.trackURL) {
             value.trackURL = response.trackURL ?? '';
             client.redis.addCurrentlyFollowing(guild, value);
-            if (value.trackURL) await _play(message, client, value.trackURL);
+
+            setTimeout(async () => {
+              if (value.trackURL) await _play(message, client, value.trackURL);
+            }, 5000);
           }
         })
         .catch((err) => logError(err));
