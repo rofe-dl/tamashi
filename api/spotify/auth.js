@@ -31,7 +31,8 @@ module.exports.authorizeBot = async () => {
 };
 
 module.exports.userAuthorizeBot = async (userHandle) => {
-  const SCOPE = 'user-read-currently-playing';
+  const SCOPE =
+    'user-read-currently-playing user-read-playback-state user-modify-playback-state user-read-playback-position playlist-read-collaborative playlist-read-private';
   const redirect_uri =
     process.env.NODE_ENV === 'dev'
       ? process.env.SPOTIFY_REDIRECT_URI_DEV
