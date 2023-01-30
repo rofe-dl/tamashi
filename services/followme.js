@@ -64,8 +64,37 @@ module.exports.followUser = async (message, client) => {
     trackURL: trackURL ?? '',
   };
 
-  // updates the song currently being played by each user being followed
-  // happens every 3 secs
+  _startScheduledCalls(client, message);
+
+  await client.redis.addCurrentlyFollowing(redisKey, redisValue);
+};
+
+async function _play(message, client, trackURL) {
+  const node = client.shoukaku.getNode();
+  const player = new MusicPlayer(client, node);
+  const result = await player.resolve(trackURL);
+  const metadata = result.tracks[0];
+
+  if (!result?.tracks?.length) {
+    return await client.channels.cache
+      .get(message.channelId)
+      .send(Replies.SONG_NOT_FOUND);
+  }
+
+  await player.play(result, message);
+
+  await client.channels.cache
+    .get(message.channelId)
+    .send(
+      `Now playing \`${metadata.info.title}\` by \`${metadata.info.author}\`.\n${metadata.info.uri}`
+    );
+}
+
+function _startScheduledCalls(client, message) {
+  /**
+   * Updates the song currently being played by each user being followed.
+   * Happens every 3 secs.
+   */
   setInterval(async () => {
     // iterate over all servers bot has joined
     for (let guild of client.guilds.cache.keys()) {
@@ -97,27 +126,4 @@ module.exports.followUser = async (message, client) => {
         .catch((err) => logError(err));
     }
   }, 3000);
-
-  await client.redis.addCurrentlyFollowing(redisKey, redisValue);
-};
-
-async function _play(message, client, trackURL) {
-  const node = client.shoukaku.getNode();
-  const player = new MusicPlayer(client, node);
-  const result = await player.resolve(trackURL);
-  const metadata = result.tracks[0];
-
-  if (!result?.tracks?.length) {
-    return await client.channels.cache
-      .get(message.channelId)
-      .send(Replies.SONG_NOT_FOUND);
-  }
-
-  await player.play(result, message);
-
-  await client.channels.cache
-    .get(message.channelId)
-    .send(
-      `Now playing \`${metadata.info.title}\` by \`${metadata.info.author}\`.\n${metadata.info.uri}`
-    );
 }
