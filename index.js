@@ -1,4 +1,10 @@
-const { Client, GatewayIntentBits, Collection, Events } = require('discord.js');
+const {
+  Client,
+  GatewayIntentBits,
+  Collection,
+  Events,
+  ActivityType,
+} = require('discord.js');
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -150,11 +156,10 @@ async function initDatabase() {
 async function initClient(client) {
   console.log('Initializing the client...');
   client.on('ready', () => {
-    // TODO activity setting doesn't work, look into it
     client.user.setActivity(
-      'Inbox "/help" to take a look at all my commands.',
+      'Type ">>help" to take a look at all my commands.',
       {
-        type: 'playing',
+        type: ActivityType.Listening,
       }
     );
 
@@ -167,7 +172,6 @@ async function initClient(client) {
   client.redis = new RedisCache(await initRedis());
   await initServer();
 
-  // todo uncomment before deploy
   // await SpotifyBotAPI.generateToken();
 
   client.login(BOT_TOKEN);

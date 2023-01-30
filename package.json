@@ -4,6 +4,7 @@
   "description": "A Discord bot primarily for music but will also support other misc. features",
   "main": "index.js",
   "scripts": {
+    "start:dev-norestart": "NODE_ENV=dev node index.js",
     "start:dev": "NODE_ENV=dev nodemon index.js",
     "start:prod": "NODE_ENV=prod nodemon index.js",
     "deploycommands": "node deploy-commands-globally.js",
