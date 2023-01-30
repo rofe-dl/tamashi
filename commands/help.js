@@ -13,9 +13,6 @@ module.exports = {
     try {
       await HelpService.printCommands(interaction, interaction.client);
     } catch (error) {
-      await interaction.reply({
-        content: Errors.FRIENDLY_ERROR_MESSAGE,
-      });
       logError(error);
     }
   },

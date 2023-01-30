@@ -76,9 +76,6 @@ function initCommands(client) {
       await command.execute(interaction);
     } catch (error) {
       logError(error);
-      await interaction.reply({
-        content: Errors.FRIENDLY_ERROR_MESSAGE,
-      });
     }
   });
 
