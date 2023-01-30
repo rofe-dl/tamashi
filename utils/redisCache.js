@@ -11,11 +11,11 @@ module.exports = class RedisCache {
     return await this.redisClient.hGetAll(key);
   }
 
-  async updateToken(updatedToken, guildID) {
-    let value = await this.redisClient.hGetAll(guildID);
+  async updateToken(updatedToken, guildId) {
+    let value = await this.redisClient.hGetAll(guildId);
     value.accessToken = updatedToken;
 
-    await this.redisClient.hSet(guildID, value);
+    await this.redisClient.hSet(guildId, value);
   }
 
   async deleteCurrentlyFollowing(key, userHandle) {

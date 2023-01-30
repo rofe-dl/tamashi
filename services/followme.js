@@ -47,21 +47,26 @@ module.exports.followUser = async (message, client) => {
     content: 'Following ' + user?.toString() + "'s Spotify now!",
   });
 
-  const { trackURL, oAuthToken: updatedToken } =
-    await UserAPI.getCurrentlyPlaying(accessToken, refreshToken);
+  const {
+    trackURL,
+    oAuthToken: updatedToken,
+    progressMs,
+    durationMs,
+  } = await UserAPI.getCurrentlyPlaying(accessToken, refreshToken);
 
   if (trackURL) await _play(message, client, trackURL);
 
   if (updatedToken !== accessToken)
-    await client.redis.updateToken(updatedToken, guildID);
+    await client.redis.updateToken(updatedToken, guildId);
 
-  const redisKey = message.guildId;
+  const redisKey = guildId;
   const redisValue = {
     userHandle,
     accessToken,
     refreshToken,
     guildId,
     trackURL: trackURL ?? '',
+    durationMs: durationMs ?? 1,
   };
 
   _startScheduledCalls(client, message);
@@ -69,7 +74,7 @@ module.exports.followUser = async (message, client) => {
   await client.redis.addCurrentlyFollowing(redisKey, redisValue);
 };
 
-async function _play(message, client, trackURL) {
+async function _play(message, client, trackURL, guildId) {
   const node = client.shoukaku.getNode();
   const player = new MusicPlayer(client, node);
   const result = await player.resolve(trackURL);
@@ -81,7 +86,7 @@ async function _play(message, client, trackURL) {
       .send(Replies.SONG_NOT_FOUND);
   }
 
-  await player.play(result, message);
+  await player.play(result, message, guildId);
 
   await client.channels.cache
     .get(message.channelId)
@@ -97,8 +102,8 @@ function _startScheduledCalls(client, message) {
    */
   setInterval(async () => {
     // iterate over all servers bot has joined
-    for (let guild of client.guilds.cache.keys()) {
-      let value = await client.redis.getCurrentlyFollowing(guild);
+    for (let guildId of client.guilds.cache.keys()) {
+      let value = await client.redis.getCurrentlyFollowing(guildId);
       if (!value.accessToken || !value.refreshToken) continue;
 
       // parallel calls to Spotify API for every user
@@ -107,20 +112,27 @@ function _startScheduledCalls(client, message) {
           // updated token received so update entry in redis
           if (response?.oAuthToken !== value.accessToken) {
             client.redis
-              .updateToken(response.oAuthToken, guild)
+              .updateToken(response.oAuthToken, guildId)
               .catch((err) => logError(err));
           }
-
-          const { progressMs, durationMs } = response;
 
           // song changed
           if (response?.trackURL !== value.trackURL) {
             value.trackURL = response.trackURL ?? '';
-            client.redis.addCurrentlyFollowing(guild, value);
+            client.redis.addCurrentlyFollowing(guildId, value);
 
-            setTimeout(async () => {
-              if (value.trackURL) await _play(message, client, value.trackURL);
-            }, 5000);
+            const botProgressMs =
+              client.shoukaku.getNode()?.players?.get(guildId)?.position ?? 0;
+
+            // change track after a delay if only small part of song is left
+            if ((botProgressMs % value.durationMs) / value.durationMs <= 0.9) {
+              await _play(message, client, value.trackURL, guildId);
+            } else {
+              setTimeout(async () => {
+                if (value.trackURL)
+                  await _play(message, client, value.trackURL, guildId);
+              }, 6500);
+            }
           }
         })
         .catch((err) => logError(err));

@@ -16,6 +16,7 @@ discord.js
 
 TODO:
 
+1. Follow position of playback as well by seeking (% result if not same length)
 1. Pause, Stop and Play command
 1. Start updating currently following right on server start
 1. Pause and Play buttons

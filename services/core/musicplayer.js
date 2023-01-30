@@ -8,9 +8,14 @@ module.exports = class MusicPlayer {
     this.shoukakuNode = shoukakuNode;
   }
 
-  async play(result, message) {
+  async play(result, message, guildId) {
     let metadata = result.tracks.shift();
-    let player = await this._get_player(message);
+    let player;
+
+    if (guildId) {
+      player = this.shoukakuNode.players.get(guildId);
+      player.stopTrack();
+    } else player = await this._get_player(message);
 
     // some spotify urls get resolved but cant be played idk why
     // so for that exception, just play from youtube
