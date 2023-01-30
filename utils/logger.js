@@ -8,13 +8,13 @@ FILE_PATH = __dirname + '/../logs/debug.log';
 // ensure file exists, if it doesn't it creates one
 fsExtra.ensureFileSync(FILE_PATH);
 
-const logFile = fs.createWriteStream(FILE_PATH, {
+const errorFile = fs.createWriteStream(FILE_PATH, {
   flags: 'a+',
 });
 
 module.exports.logError = (error, writeToFile = true) => {
   if (writeToFile) {
-    logFile.write(
+    errorFile.write(
       'At ' +
         datetime.toTimeString() +
         ' on ' +

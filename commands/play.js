@@ -1,7 +1,7 @@
 const Errors = require('../utils/enums/errors');
 const { SlashCommandBuilder } = require('discord.js');
 const PlayService = require('../services/play');
-const { logError } = require('../utils/errorlogger');
+const { logError } = require('../utils/logger');
 
 module.exports = {
   data: new SlashCommandBuilder()

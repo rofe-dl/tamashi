@@ -3,7 +3,7 @@ const Replies = require('../utils/enums/replies');
 const { userAuthorizeBot, reAuthorizeUser } = require('../api/spotify/auth');
 const UserServices = require('../repository/user.services');
 const { UserAPI } = require('../api/spotify/userAPI');
-const { logError } = require('../utils/errorlogger');
+const { logError } = require('../utils/logger');
 const MusicPlayer = require('./core/musicplayer');
 
 module.exports.followUser = async (message, client) => {
