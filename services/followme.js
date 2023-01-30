@@ -15,6 +15,13 @@ module.exports.followUser = async (message, client) => {
   const user = message.author ?? message.user;
   const userHandle = user?.username + '#' + user?.discriminator;
   const guildId = message.guildId;
+  const currentlyFollowing = await client.redis.getEntry(guildId);
+
+  if (currentlyFollowing?.userHandle) {
+    return await message.reply({
+      content: Replies.ALREADY_FOLLOWING_SOMEONE,
+    });
+  }
 
   const userInDB = await UserServices.getUser(userHandle);
 
@@ -71,7 +78,7 @@ module.exports.followUser = async (message, client) => {
 
   _startScheduledCalls(client, message);
 
-  await client.redis.addCurrentlyFollowing(redisKey, redisValue);
+  await client.redis.addEntry(redisKey, redisValue);
 };
 
 async function _play(message, client, trackURL, guildId) {
@@ -103,15 +110,15 @@ function _startScheduledCalls(client, message) {
   setInterval(async () => {
     // iterate over all servers bot has joined
     for (let guildId of client.guilds.cache.keys()) {
-      let value = await client.redis.getCurrentlyFollowing(guildId);
+      let value = await client.redis.getEntry(guildId);
       if (!value.accessToken || !value.refreshToken) continue;
 
       // parallel calls to Spotify API for every user
       UserAPI.getCurrentlyPlaying(value.accessToken, value.refreshToken)
         .then(async (response) => {
-          // updated token received so update entry in redis
           if (response?.oAuthToken !== value.accessToken) {
-            client.redis
+            // updated token received so update entry in redis
+            await client.redis
               .updateToken(response.oAuthToken, guildId)
               .catch((err) => logError(err));
           }
@@ -119,7 +126,7 @@ function _startScheduledCalls(client, message) {
           // song changed
           if (response?.trackURL !== value.trackURL) {
             value.trackURL = response.trackURL ?? '';
-            client.redis.addCurrentlyFollowing(guildId, value);
+            await client.redis.addEntry(guildId, value);
 
             const botProgressMs =
               client.shoukaku.getNode()?.players?.get(guildId)?.position ?? 0;

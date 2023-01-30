@@ -3,14 +3,6 @@ module.exports = class RedisCache {
     this.redisClient = redisClient;
   }
 
-  async addCurrentlyFollowing(key, value) {
-    await this.redisClient.hSet(key, value);
-  }
-
-  async getCurrentlyFollowing(key) {
-    return await this.redisClient.hGetAll(key);
-  }
-
   async updateToken(updatedToken, guildId) {
     let value = await this.redisClient.hGetAll(guildId);
     value.accessToken = updatedToken;
@@ -23,7 +15,15 @@ module.exports = class RedisCache {
     if (value?.userHandle === userHandle) await this.redisClient.del(key);
   }
 
-  async forceDeleteCurrentlyFollowing(key) {
+  async deleteEntry(key) {
     await this.redisClient.del(key);
+  }
+
+  async addEntry(key, value) {
+    return await this.redisClient.hSet(key, value);
+  }
+
+  async getEntry(key) {
+    return await this.redisClient.hGetAll(key);
   }
 };

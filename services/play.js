@@ -27,3 +27,5 @@ module.exports.play = async (message, client, phrase) => {
     content: `Now playing \`${metadata.info.title}\` by \`${metadata.info.author}\`.\n${metadata.info.uri}`,
   });
 };
+
+module.exports.pause = async (message, client, phrase) => {};

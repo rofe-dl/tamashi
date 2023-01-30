@@ -14,7 +14,7 @@ module.exports = class MusicPlayer {
 
     if (guildId) {
       player = this.shoukakuNode.players.get(guildId);
-      player.stopTrack();
+      if (player) player.stopTrack();
     } else player = await this._get_player(message);
 
     // some spotify urls get resolved but cant be played idk why

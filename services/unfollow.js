@@ -5,12 +5,13 @@ module.exports.unfollow = async (message, client) => {
   const userHandle = user?.username + '#' + user?.discriminator;
   const guildId = message.guildId;
 
-  const followedUser = await client.redis.getCurrentlyFollowing(guildId);
+  const followedUser = await client.redis.getEntry(guildId);
 
   if (followedUser?.userHandle) {
-    await client.redis.forceDeleteCurrentlyFollowing(guildId);
+    await client.redis.deleteEntry(guildId);
     await message.reply({
-      content: 'No longer following ' + user?.toString() + "'s Spotify now.",
+      content:
+        'No longer following @' + followedUser?.userHandle + "'s Spotify now.",
     });
   } else {
     await message.reply({
