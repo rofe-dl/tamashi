@@ -14,12 +14,11 @@ mongodb
 node
 discord.js
 
-pause spotify app playback if you dont want song ending early
-
 TODO:
 
+1. Pause command
+1. Fix cut off at the end
 1. Start updating currently following right on server start
-1. Stop following on disconnect
 1. Pause and Play buttons
 1. Rate limiting on Spotify Bot API
 1. Queue feature
