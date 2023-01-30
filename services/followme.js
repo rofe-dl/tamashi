@@ -116,30 +116,39 @@ function _startScheduledCalls(client, message) {
       // parallel calls to Spotify API for every user
       UserAPI.getCurrentlyPlaying(value.accessToken, value.refreshToken)
         .then(async (response) => {
-          if (response?.oAuthToken !== value.accessToken) {
-            // updated token received so update entry in redis
-            await client.redis
-              .updateToken(response.oAuthToken, guildId)
-              .catch((err) => logError(err));
-          }
+          try {
+            clearTimeout(response.timeout);
 
-          // song changed
-          if (response?.trackURL !== value.trackURL) {
-            value.trackURL = response.trackURL ?? '';
-            await client.redis.addEntry(guildId, value);
-
-            const botProgressMs =
-              client.shoukaku.getNode()?.players?.get(guildId)?.position ?? 0;
-
-            // change track after a delay if only small part of song is left
-            if ((botProgressMs % value.durationMs) / value.durationMs <= 0.9) {
-              await _play(message, client, value.trackURL, guildId);
-            } else {
-              setTimeout(async () => {
-                if (value.trackURL)
-                  await _play(message, client, value.trackURL, guildId);
-              }, 6500);
+            if (response?.oAuthToken !== value.accessToken) {
+              // updated token received so update entry in redis
+              await client.redis
+                .updateToken(response.oAuthToken, guildId)
+                .catch((err) => logError(err));
             }
+
+            // song changed
+            if (response?.trackURL !== value.trackURL) {
+              value.trackURL = response.trackURL ?? '';
+              await client.redis.addEntry(guildId, value);
+
+              const botProgressMs =
+                client.shoukaku.getNode()?.players?.get(guildId)?.position ?? 0;
+
+              // change track after a delay if only small part of song is left
+              if (
+                (botProgressMs % value.durationMs) / value.durationMs <=
+                0.9
+              ) {
+                await _play(message, client, value.trackURL, guildId);
+              } else {
+                setTimeout(async () => {
+                  if (value.trackURL)
+                    await _play(message, client, value.trackURL, guildId);
+                }, 6500);
+              }
+            }
+          } catch (err) {
+            logError(err);
           }
         })
         .catch((err) => logError(err));
