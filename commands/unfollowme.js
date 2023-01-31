@@ -1,6 +1,6 @@
 const Errors = require('../utils/enums/errors');
 const { SlashCommandBuilder } = require('discord.js');
-const UnfollowService = require('../services/unfollow');
+const FollowService = require('../services/followService');
 const { logError } = require('../utils/logger');
 
 module.exports = {
@@ -11,7 +11,7 @@ module.exports = {
   // used by official slash commands
   async execute(interaction) {
     try {
-      await UnfollowService.unfollow(interaction, interaction.client);
+      await FollowService.unfollow(interaction, interaction.client);
     } catch (error) {
       logError(error);
     }
@@ -20,11 +20,8 @@ module.exports = {
   // used by prefix commands
   async executedFromPrefix(message, client, args) {
     try {
-      await UnfollowService.unfollow(message, client);
+      await FollowService.unfollow(message, client);
     } catch (error) {
-      await message.reply({
-        content: Errors.FRIENDLY_ERROR_MESSAGE,
-      });
       logError(error);
     }
   },

@@ -11,7 +11,7 @@ const path = require('node:path');
 const { Shoukaku, Connectors } = require('shoukaku');
 const Errors = require('./utils/enums/errors');
 const { logError } = require('./utils/logger');
-const { SpotifyBotAPI } = require('./api/spotify/botAPI');
+const { startScheduledSpotifyCalls } = require('./services/followService');
 const mongoose = require('mongoose');
 const redis = require('redis');
 const RedisCache = require('./utils/redisCache');
@@ -171,6 +171,7 @@ async function initClient(client) {
   await initDatabase();
   client.redis = new RedisCache(await initRedis());
   await initServer();
+  startScheduledSpotifyCalls(client);
 
   // await SpotifyBotAPI.generateToken();
 

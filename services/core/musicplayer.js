@@ -8,16 +8,11 @@ module.exports = class MusicPlayer {
     this.shoukakuNode = shoukakuNode;
   }
 
-  async play(result, message, guildId) {
+  async play(result, guildId, voiceChannelId) {
+    if (!result) return;
+
     let metadata = result.tracks.shift();
-    let player;
-
-    if (guildId) {
-      player = this.shoukakuNode.players.get(guildId);
-      if (player) player.stopTrack();
-    }
-
-    if (!player) player = await this._get_player(message);
+    let player = await this._get_player(guildId, voiceChannelId);
 
     // some spotify urls get resolved but cant be played idk why
     // so for that exception, just play from youtube
@@ -41,19 +36,24 @@ module.exports = class MusicPlayer {
     player.playTrack({ track: metadata.track }).setVolume(0.75);
   }
 
-  async _get_player(message) {
-    await this.shoukakuNode.leaveChannel(message.guild.id);
+  async _get_player(guildId, voiceChannelId) {
+    await this.shoukakuNode.leaveChannel(guildId);
     const player = await this.shoukakuNode.joinChannel({
-      guildId: message.guild.id,
-      channelId: message.member.voice.channelId,
+      guildId: guildId,
+      channelId: voiceChannelId,
       shardId: 0, // if unsharded it will always be zero (depending on your library implementation),
       deaf: true,
+    });
+
+    player.on('closed', async () => {
+      player.stopTrack();
     });
 
     return player;
   }
 
   async resolve(phrase) {
+    if (!phrase || phrase.trim() === '') return;
     let result;
 
     // if it's a URL, just play it directly

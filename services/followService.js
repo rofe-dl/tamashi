@@ -34,8 +34,6 @@ module.exports.followUser = async (message, client) => {
     });
   }
 
-  // todo check if already following this user
-
   const refreshToken = userInDB.refreshToken;
 
   let accessToken;
@@ -59,9 +57,18 @@ module.exports.followUser = async (message, client) => {
     oAuthToken: updatedToken,
     progressMs,
     durationMs,
+    timeout,
   } = await UserAPI.getCurrentlyPlaying(accessToken, refreshToken);
+  clearTimeout(timeout);
 
-  if (trackURL) await _play(message, client, trackURL);
+  if (trackURL)
+    await _play(
+      guildId,
+      message.member.voice.channelId,
+      message.channelId,
+      client,
+      trackURL
+    );
 
   if (updatedToken !== accessToken)
     await client.redis.updateToken(updatedToken, guildId);
@@ -74,35 +81,55 @@ module.exports.followUser = async (message, client) => {
     guildId,
     trackURL: trackURL ?? '',
     durationMs: durationMs ?? 1,
+    voiceChannelId: message.member.voice.channelId,
+    textChannelId: message.channelId,
   };
-
-  _startScheduledCalls(client, message);
 
   await client.redis.addEntry(redisKey, redisValue);
 };
 
-async function _play(message, client, trackURL, guildId) {
+module.exports.unfollow = async (message, client) => {
+  const user = message.author ?? message.user;
+  const userHandle = user?.username + '#' + user?.discriminator;
+  const guildId = message.guildId;
+
+  const followedUser = await client.redis.getEntry(guildId);
+
+  if (followedUser?.userHandle) {
+    await client.redis.deleteEntry(guildId);
+    await message.reply({
+      content:
+        'No longer following @' + followedUser?.userHandle + "'s Spotify now.",
+    });
+  } else {
+    await message.reply({
+      content: Replies.NOT_FOLLOWING_ANYONE,
+    });
+  }
+};
+
+async function _play(guildId, voiceChannelId, textChannelId, client, trackURL) {
   const node = client.shoukaku.getNode();
   const player = new MusicPlayer(client, node);
   const result = await player.resolve(trackURL);
-  const metadata = result.tracks[0];
+  const metadata = result?.tracks[0];
 
   if (!result?.tracks?.length) {
     return await client.channels.cache
-      .get(message.channelId)
+      .get(textChannelId)
       .send(Replies.SONG_NOT_FOUND);
   }
 
-  await player.play(result, message, guildId);
+  await player.play(result, guildId, voiceChannelId);
 
   await client.channels.cache
-    .get(message.channelId)
+    .get(textChannelId)
     .send(
       `Now playing \`${metadata.info.title}\` by \`${metadata.info.author}\`.\n${metadata.info.uri}`
     );
 }
 
-function _startScheduledCalls(client, message) {
+module.exports.startScheduledSpotifyCalls = async (client) => {
   /**
    * Updates the song currently being played by each user being followed.
    * Happens every 3 secs.
@@ -110,10 +137,11 @@ function _startScheduledCalls(client, message) {
   setInterval(async () => {
     // iterate over all servers bot has joined
     for (let guildId of client.guilds.cache.keys()) {
+      // redis will have an entry if someone from this guild is being followed
       let value = await client.redis.getEntry(guildId);
       if (!value.accessToken || !value.refreshToken) continue;
 
-      // parallel calls to Spotify API for every user
+      // parallel calls to Spotify API for every follow
       UserAPI.getCurrentlyPlaying(value.accessToken, value.refreshToken)
         .then(async (response) => {
           try {
@@ -121,9 +149,7 @@ function _startScheduledCalls(client, message) {
 
             if (response?.oAuthToken !== value.accessToken) {
               // updated token received so update entry in redis
-              await client.redis
-                .updateToken(response.oAuthToken, guildId)
-                .catch((err) => logError(err));
+              await client.redis.updateToken(response.oAuthToken, guildId);
             }
 
             // song changed
@@ -131,20 +157,30 @@ function _startScheduledCalls(client, message) {
               value.trackURL = response.trackURL ?? '';
               await client.redis.addEntry(guildId, value);
 
+              if (!value.trackURL) return;
+
               const botProgressMs =
                 client.shoukaku.getNode()?.players?.get(guildId)?.position ?? 0;
 
               // change track after a delay if only small part of song is left
-              if (
-                (botProgressMs % value.durationMs) / value.durationMs <=
-                0.9
-              ) {
-                await _play(message, client, value.trackURL, guildId);
+              if (_changeSongImmediately(botProgressMs, value.durationMs)) {
+                await _play(
+                  guildId,
+                  value.voiceChannelId,
+                  value.textChannelId,
+                  client,
+                  value.trackURL
+                );
               } else {
                 setTimeout(async () => {
-                  if (value.trackURL)
-                    await _play(message, client, value.trackURL, guildId);
-                }, 6500);
+                  await _play(
+                    guildId,
+                    value.voiceChannelId,
+                    value.textChannelId,
+                    client,
+                    value.trackURL
+                  );
+                }, 6000);
               }
             }
           } catch (err) {
@@ -154,4 +190,8 @@ function _startScheduledCalls(client, message) {
         .catch((err) => logError(err));
     }
   }, 3000);
+};
+
+function _changeSongImmediately(botProgressMs, durationMs) {
+  return (botProgressMs % durationMs) / durationMs <= 0.9;
 }

@@ -1,6 +1,6 @@
 const Errors = require('../utils/enums/errors');
 const { SlashCommandBuilder } = require('discord.js');
-const HelpService = require('../services/help');
+const HelpService = require('../services/helpService');
 const { logError } = require('../utils/logger');
 
 module.exports = {
@@ -22,9 +22,6 @@ module.exports = {
     try {
       await HelpService.printCommands(message, client);
     } catch (error) {
-      await message.reply({
-        content: Errors.FRIENDLY_ERROR_MESSAGE,
-      });
       logError(error);
     }
   },

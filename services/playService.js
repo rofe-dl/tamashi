@@ -3,10 +3,6 @@ const Replies = require('../utils/enums/replies');
 const MusicPlayer = require('./core/musicplayer');
 
 module.exports.play = async (message, client, phrase) => {
-  // todo bot follows user into vc XD
-  // todo what happens if song change while in different channel
-  // todo what happens if change followme without stopfollowme command
-
   if (!message.member.voice.channel) {
     return await message.reply(Errors.USER_NOT_IN_VOICE);
   } else if (phrase.trim().length === 0)
@@ -15,7 +11,7 @@ module.exports.play = async (message, client, phrase) => {
   const node = client.shoukaku.getNode();
   const player = new MusicPlayer(client, node);
   const result = await player.resolve(phrase);
-  const metadata = result.tracks[0];
+  const metadata = result?.tracks[0];
 
   if (!result?.tracks?.length) {
     return await message.reply(Replies.SONG_NOT_FOUND);
@@ -28,4 +24,26 @@ module.exports.play = async (message, client, phrase) => {
   });
 };
 
-module.exports.pause = async (message, client, phrase) => {};
+module.exports.pause = async (message, client) => {
+  if (!message.member.voice.channel) {
+    return await message.reply(Errors.USER_NOT_IN_VOICE);
+  }
+
+  // todo implement
+};
+
+module.exports.stop = async (message, client) => {
+  if (!message.member.voice.channel) {
+    return await message.reply(Errors.USER_NOT_IN_VOICE);
+  }
+
+  // todo implement
+};
+
+module.exports.resume = async (message, client) => {
+  if (!message.member.voice.channel) {
+    return await message.reply(Errors.USER_NOT_IN_VOICE);
+  }
+
+  // todo implement
+};
