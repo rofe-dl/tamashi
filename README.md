@@ -18,7 +18,6 @@ discord.js
 TODO:
 
 1. Pause, Stop and Resume command for manual /play command
-1. Command to see who the bot is following at that moment
 1. Pause, Play, Resume, Follow, Unfollow buttons
 1. Rate limiting on Spotify Bot API
 1. Queue feature

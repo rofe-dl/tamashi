@@ -1,19 +1,17 @@
 const Errors = require('../utils/enums/errors');
 const { SlashCommandBuilder } = require('discord.js');
-const ForgetMeService = require('../services/forgetService');
+const FollowService = require('../services/followService');
 const { logError } = require('../utils/logger');
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('forgetme')
-    .setDescription(
-      'Makes the bot forget your data so you can reauthorize it to access your Spotify again.'
-    ),
+    .setName('whofollow')
+    .setDescription('Tells you who the bot is following.'),
 
   // used by official slash commands
   async execute(interaction) {
     try {
-      await ForgetMeService.forgetMe(interaction, interaction.client);
+      await FollowService.whofollow(interaction, interaction.client);
     } catch (error) {
       logError(error);
     }
@@ -22,7 +20,7 @@ module.exports = {
   // used by prefix commands
   async executedFromPrefix(message, client, args) {
     try {
-      await ForgetMeService.forgetMe(message, client);
+      await FollowService.whofollow(message, client);
     } catch (error) {
       logError(error);
     }

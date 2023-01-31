@@ -86,6 +86,21 @@ module.exports.followUser = async (message, client) => {
   await client.redis.addEntry(redisKey, redisValue);
 };
 
+module.exports.whofollow = async (message, client) => {
+  const followedUser = await client.redis.getEntry(guildId);
+
+  if (followedUser?.userHandle) {
+    await message.reply({
+      content:
+        'Currently following @' + followedUser?.userHandle + "'s Spotify now.",
+    });
+  } else {
+    await message.reply({
+      content: Replies.NOT_FOLLOWING_ANYONE,
+    });
+  }
+};
+
 module.exports.unfollow = async (message, client) => {
   const user = message.author ?? message.user;
   const userHandle = user?.username + '#' + user?.discriminator;
@@ -99,9 +114,11 @@ module.exports.unfollow = async (message, client) => {
       content:
         'No longer following @' + followedUser?.userHandle + "'s Spotify now.",
     });
+
+    await client.shoukaku.getNode().leaveChannel(guildId);
   } else {
     await message.reply({
-      content: Replies.NOT_FOLLOWING_ANYONE,
+      content: Replies.BUT_NOT_FOLLOWING_ANYONE,
     });
   }
 };
@@ -176,13 +193,20 @@ module.exports.startScheduledSpotifyCalls = async (client) => {
                     client,
                     value.trackURL
                   );
-                }, 4000);
+                }, 6500);
               }
-            } else if (Math.abs(botProgressMs - response.progressMs) > 6000)
-              client.shoukaku
-                .getNode()
-                .players.get(guildId)
-                .seekTo(response.progressMs);
+            }
+            // if a song is playing, update the progress if its greater than 8s
+            // uncommented this feature as the buffering gives a bad experience
+            // else if (
+            //   client.shoukaku.getNode().players.get(guildId).track &&
+            //   Math.abs(botProgressMs - response.progressMs) > 8000
+            // ) {
+            //   client.shoukaku
+            //     .getNode()
+            //     .players.get(guildId)
+            //     .seekTo(response.progressMs);
+            // }
           } catch (err) {
             logError(err);
           }

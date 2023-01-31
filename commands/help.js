@@ -6,7 +6,7 @@ const { logError } = require('../utils/logger');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('help')
-    .setDescription('Shows all the commands available'),
+    .setDescription('Shows all the commands available.'),
 
   // used by official slash commands
   async execute(interaction) {

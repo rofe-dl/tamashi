@@ -12,7 +12,11 @@ module.exports = class MusicPlayer {
     if (!result) return;
 
     let metadata = result.tracks.shift();
-    let player = await this._get_player(guildId, voiceChannelId);
+
+    let player = this.shoukakuNode?.players?.get(guildId);
+
+    if (player) player.stopTrack();
+    else player = await this._get_player(guildId, voiceChannelId);
 
     // some spotify urls get resolved but cant be played idk why
     // so for that exception, just play from youtube
@@ -96,6 +100,6 @@ module.exports = class MusicPlayer {
     else if (flag === PLAY_FROM.SOUNDCLOUD) phrase = 'scsearch:' + phrase;
     else if (flag === PLAY_FROM.YOUTUBE) phrase = 'ytsearch:' + phrase;
 
-    if (phrase) return await this.shoukakuNode.rest.resolve(phrase);
+    if (phrase) return await this._defaultResolve(phrase);
   }
 };

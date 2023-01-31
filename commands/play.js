@@ -12,7 +12,7 @@ module.exports = {
     .addStringOption((option) =>
       option
         .setName('phrase')
-        .setDescription('Name of the song and artist or a song URL')
+        .setDescription('Name of the song and artist or a song URL.')
         .setRequired(true)
     ),
 
