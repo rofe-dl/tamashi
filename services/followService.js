@@ -57,9 +57,7 @@ module.exports.followUser = async (message, client) => {
     oAuthToken: updatedToken,
     progressMs,
     durationMs,
-    timeout,
   } = await UserAPI.getCurrentlyPlaying(accessToken, refreshToken);
-  clearTimeout(timeout);
 
   if (trackURL)
     await _play(
@@ -145,12 +143,13 @@ module.exports.startScheduledSpotifyCalls = async (client) => {
       UserAPI.getCurrentlyPlaying(value.accessToken, value.refreshToken)
         .then(async (response) => {
           try {
-            clearTimeout(response.timeout);
-
             if (response?.oAuthToken !== value.accessToken) {
               // updated token received so update entry in redis
               await client.redis.updateToken(response.oAuthToken, guildId);
             }
+
+            const botProgressMs =
+              client.shoukaku.getNode()?.players?.get(guildId)?.position ?? 0;
 
             // song changed
             if (response?.trackURL !== value.trackURL) {
@@ -158,9 +157,6 @@ module.exports.startScheduledSpotifyCalls = async (client) => {
               await client.redis.addEntry(guildId, value);
 
               if (!value.trackURL) return;
-
-              const botProgressMs =
-                client.shoukaku.getNode()?.players?.get(guildId)?.position ?? 0;
 
               // change track after a delay if only small part of song is left
               if (_changeSongImmediately(botProgressMs, value.durationMs)) {
@@ -180,16 +176,20 @@ module.exports.startScheduledSpotifyCalls = async (client) => {
                     client,
                     value.trackURL
                   );
-                }, 6000);
+                }, 4000);
               }
-            }
+            } else if (Math.abs(botProgressMs - response.progressMs) > 6000)
+              client.shoukaku
+                .getNode()
+                .players.get(guildId)
+                .seekTo(response.progressMs);
           } catch (err) {
             logError(err);
           }
         })
         .catch((err) => logError(err));
     }
-  }, 3000);
+  }, 2000);
 };
 
 function _changeSongImmediately(botProgressMs, durationMs) {

@@ -11,12 +11,6 @@ module.exports.UserAPI = {
   },
 
   async getCurrentlyPlaying(oAuthToken, refreshToken) {
-    let abortController = new AbortController();
-    const timeout = setTimeout(() => {
-      abortController.abort();
-      console.log('Aborted');
-    }, 3000);
-
     const playingURL = `${URL}/me/player/currently-playing`;
     const options = {
       headers: {
@@ -24,7 +18,6 @@ module.exports.UserAPI = {
         Accept: 'application/json',
         Authorization: `Bearer ${oAuthToken}`,
       },
-      signal: abortController.signal,
     };
 
     let response;
@@ -46,7 +39,6 @@ module.exports.UserAPI = {
       oAuthToken,
       progressMs: response?.data?.progress_ms,
       durationMs: response?.data?.item?.duration_ms,
-      timeout,
     };
   },
 };
