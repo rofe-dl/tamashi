@@ -18,6 +18,10 @@ module.exports = class MusicPlayer {
     if (player) player.stopTrack();
     else player = await this._get_player(guildId, voiceChannelId);
 
+    // removes all previous event listeners for on 'exceptions'
+    player.clean();
+
+    // sets the new event listener
     // some spotify urls get resolved but cant be played idk why
     // so for that exception, just play from youtube
     // https://deivu.github.io/Shoukaku/classes/guild_Player.Player.html#on
