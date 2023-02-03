@@ -32,6 +32,10 @@ module.exports.pause = async (message, client) => {
   const player = client.shoukaku.getNode().players.get(message.guildId);
 
   if (player) player.setPaused(true);
+
+  await message.reply({
+    content: 'Paused.',
+  });
 };
 
 module.exports.stop = async (message, client) => {
@@ -42,6 +46,10 @@ module.exports.stop = async (message, client) => {
   const player = client.shoukaku.getNode().players.get(message.guildId);
 
   if (player) player.stopTrack();
+
+  await message.reply({
+    content: 'Stopped.',
+  });
 };
 
 module.exports.resume = async (message, client) => {
@@ -52,4 +60,8 @@ module.exports.resume = async (message, client) => {
   const player = client.shoukaku.getNode().players.get(message.guildId);
 
   if (player) player.setPaused(false);
+
+  await message.reply({
+    content: 'Resumed.',
+  });
 };
