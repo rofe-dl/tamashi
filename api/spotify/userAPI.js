@@ -6,7 +6,9 @@ const URL = 'https://api.spotify.com/v1';
 
 module.exports.UserAPI = {
   async regenerateToken(refreshToken) {
-    const { access_token: accessToken } = auth.reAuthorizeUser(refreshToken);
+    const { access_token: accessToken } = await auth.reAuthorizeUser(
+      refreshToken
+    );
     return accessToken;
   },
 
