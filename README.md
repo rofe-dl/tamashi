@@ -8,7 +8,7 @@ Apart from that, it also supports manually playing songs with the `/play` comman
 
 And no, I don't have plans to host and make this a public bot for everyone. This is just a hobby project for private use in my Discord servers. Please set it up yourselves.
 
-## Commands
+## Key Commands
 
 | Command      | Description                                                                                                                                                                                                                                              |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -41,6 +41,16 @@ And no, I don't have plans to host and make this a public bot for everyone. This
    - Run `npm run start:dev` if running the bot locally. If you're hosting it online, run `npm run start:prod`.
 
 1. [**Only needed if you're running the bot locally**] [To make your local server publicly accessible as a callback for Spotify, use ngrok. It makes your localhost available to the public](./docs/setup_instructions/i_ngrok.md)
+
+## Tech Stack
+
+- NodeJS
+- Discord.js
+- Express
+- MongoDB with Mongoose
+- Redis
+- Lavalink
+- Docker
 
 ## Improvements
 
