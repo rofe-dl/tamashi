@@ -17,7 +17,7 @@ module.exports.play = async (message, client, phrase) => {
     return await message.reply(Replies.SONG_NOT_FOUND);
   }
 
-  await player.play(result, message);
+  await player.play(result, message.guildId, message.member.voice.channelId);
 
   await message.reply({
     content: `Now playing \`${metadata.info.title}\` by \`${metadata.info.author}\`.\n${metadata.info.uri}`,
@@ -29,7 +29,9 @@ module.exports.pause = async (message, client) => {
     return await message.reply(Errors.USER_NOT_IN_VOICE);
   }
 
-  // todo implement
+  const player = client.shoukaku.getNode().players.get(message.guildId);
+
+  if (player) player.setPaused(true);
 };
 
 module.exports.stop = async (message, client) => {
@@ -37,7 +39,9 @@ module.exports.stop = async (message, client) => {
     return await message.reply(Errors.USER_NOT_IN_VOICE);
   }
 
-  // todo implement
+  const player = client.shoukaku.getNode().players.get(message.guildId);
+
+  if (player) player.stopTrack();
 };
 
 module.exports.resume = async (message, client) => {
@@ -45,5 +49,7 @@ module.exports.resume = async (message, client) => {
     return await message.reply(Errors.USER_NOT_IN_VOICE);
   }
 
-  // todo implement
+  const player = client.shoukaku.getNode().players.get(message.guildId);
+
+  if (player) player.setPaused(false);
 };
