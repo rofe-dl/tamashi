@@ -10,8 +10,6 @@ And no, I don't have plans to host and make this a public bot for everyone. This
 
 ## Commands
 
----
-
 | Command      | Description                                                                                                                                                                                                                                              |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/help`      | Lists all the commands.                                                                                                                                                                                                                                  |
@@ -23,8 +21,6 @@ And no, I don't have plans to host and make this a public bot for everyone. This
 | `/pause`     | Pauses the currently playing song.                                                                                                                                                                                                                       |
 | `/resume`    | Resumes the currently playing song if it's paused.                                                                                                                                                                                                       |
 | `/stop`      | Stops the currently playing song.                                                                                                                                                                                                                        |
-
----
 
 ## How do I set this up?
 
