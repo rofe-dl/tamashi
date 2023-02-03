@@ -37,6 +37,10 @@ module.exports = class MusicPlayer {
       this._execute(player, metadata);
     });
 
+    player.on('closed', async () => {
+      player.stopTrack();
+    });
+
     this._execute(player, metadata);
   }
 
@@ -51,10 +55,6 @@ module.exports = class MusicPlayer {
       channelId: voiceChannelId,
       shardId: 0, // if unsharded it will always be zero (depending on your library implementation),
       deaf: true,
-    });
-
-    player.on('closed', async () => {
-      player.stopTrack();
     });
 
     return player;
