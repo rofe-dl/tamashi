@@ -87,7 +87,7 @@ module.exports.followUser = async (message, client) => {
 };
 
 module.exports.whofollow = async (message, client) => {
-  const followedUser = await client.redis.getEntry(guildId);
+  const followedUser = await client.redis.getEntry(message.guildId);
 
   if (followedUser?.userHandle) {
     await message.reply({
