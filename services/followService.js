@@ -193,7 +193,7 @@ module.exports.startScheduledSpotifyCalls = async (client) => {
                     client,
                     value.trackURL
                   );
-                }, 6500);
+                }, 8000);
               }
             }
             // if a song is playing, update the progress if its greater than 8s
