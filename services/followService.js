@@ -171,6 +171,7 @@ module.exports.startScheduledSpotifyCalls = async (client) => {
             // song changed
             if (response?.trackURL !== value.trackURL) {
               value.trackURL = response.trackURL ?? '';
+              value.durationMs = response.durationMs ?? 1;
               await client.redis.addEntry(guildId, value);
 
               if (!value.trackURL) return;
@@ -193,7 +194,7 @@ module.exports.startScheduledSpotifyCalls = async (client) => {
                     client,
                     value.trackURL
                   );
-                }, 13000);
+                }, 11000);
               }
             }
             // if a song is playing, update the progress if its greater than 8s
