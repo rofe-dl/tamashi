@@ -1,4 +1,5 @@
 config.env
+application.yml
 
 # Logs
 **/logs

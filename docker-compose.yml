@@ -1,0 +1,42 @@
+version: '3.8'
+services:
+  tamashi-bot:
+    build: ./
+    image: rofedl/tamashi:1.0.0
+    ports:
+      - 8080:8080
+    depends_on:
+      - redis
+      - lavalink
+    networks:
+      - default
+    environment:
+      REDIS_DOCKER_HOST: redis
+      LAVALINK_DOCKER_HOST: lavalink
+    volumes:
+      - type: bind
+        source: ./config.env
+        target: /opt/tamashi/config.env
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
+    networks:
+      - default
+    logging:
+      driver: none
+  lavalink:
+    image: fredboat/lavalink
+    ports:
+      - 2333:2333
+    networks:
+      - default
+    volumes:
+      - type: bind
+        source: ./application.yml
+        target: /opt/Lavalink/application.yml
+    logging:
+      driver: none
+
+networks:
+  default:

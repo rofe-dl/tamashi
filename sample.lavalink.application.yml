@@ -1,5 +1,5 @@
 server: # REST and WS server
-  port: 2333 # INPUT: change if lavalink is using a different port
+  port: 2333
   address: 0.0.0.0 # INPUT: change if using a web hosted lavalink server
 plugins:
   lavasrc:

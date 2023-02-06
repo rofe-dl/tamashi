@@ -1,0 +1,4 @@
+logs/
+node_modules/
+config.env
+application.yml

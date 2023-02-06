@@ -22,11 +22,13 @@ PREFIX = `>>`;
 
 function initShoukaku(client) {
   process.stdout.write('Connecting to the Lavalink server...');
+  const LAVALINK_HOST =
+    process.env.LAVALINK_DOCKER_HOST ?? process.env.LAVALINK_HOST;
   // lavalink setup
   const Nodes = [
     {
       name: 'Lavalink Server',
-      url: process.env.LAVALINK_URL,
+      url: LAVALINK_HOST + ':' + process.env.LAVALINK_PORT,
       auth: process.env.LAVALINK_PASSWORD,
     },
   ];
@@ -127,8 +129,9 @@ async function initServer() {
 }
 
 async function initRedis() {
+  const REDIS_HOST = process.env.REDIS_DOCKER_HOST ?? process.env.REDIS_HOST;
   const redisClient = redis.createClient({
-    url: 'redis://' + process.env.REDIS_URL,
+    url: 'redis://' + REDIS_HOST + ':' + process.env.REDIS_PORT,
   });
 
   redisClient.on('error', (err) => logError(err));

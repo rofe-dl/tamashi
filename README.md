@@ -24,23 +24,42 @@ And no, I don't have plans to host and make this a public bot for everyone. This
 
 ## How do I set this up?
 
+### **Using Docker (the easy way)**
+
+1. Make sure you have Docker and Docker Compose installed.
+1. Make a file called `config.env` and `application.yml` in a folder and copy the contents of my `sample.config.env` and `sample.lavalink.application.yml` respectively into it.
+1. [Go to the developer dashboard of Spotify and create a new application there](./docs//setup_instructions/i_spotify_dev.md).
+1. [Go to the developer dashboard of Discord and make a bot there](./docs/setup_instructions/i_discord_dev.md).
+1. [Make a MongoDB database in Atlas](https://youtu.be/084rmLU1UgA?t=39).
+   - Copy your link shown around `3:09` of the video and paste it into `MONGODB_URL` in your `config.env` file.
+1. **IMPORTANT**: Replace the values in both `config.env` and `application.yml` files with your own config info where I tagged `#INPUT`.
+1. In the same folder, make a `docker-compose.yml` file and make it just like mine without changing anything inside.
+1. Final steps to start the bot:
+
+   - Open the terminal in this folder. Run `docker pull rofedl/tamashi:1.0.0`.
+   - Run `docker-compose up`. You might get an error (ECONNREFUSED) from Node the first time you run it. Ignore it.
+   - To make the slash commands work, enter the shell of the container by running `docker-compose run tamashi-bot sh`. Then, run `npm run deploycommands`. Exit the shell using `exit` command. You'll only have to run this once. However, if you make any changes to the command names or add/delete new ones, deploy the commands again.
+   - To stop the bot, just press Ctrl + C.
+
+### **Manual Setup (the hard way)**
+
 1. Download this codebase.
 1. [Install Node.js for your operating system however you want](./docs/setup_instructions/i_node.md)
-1. [Go to the developer dashboard of Spotify and create a new application there](./docs//setup_instructions/i_spotify_dev.md)
-1. [Go to the developer dashboard of Discord and make a bot there](./docs/setup_instructions/i_discord_dev.md)
-1. [Setup a Lavalink server](./docs/setup_instructions/i_lavalink.md)
-
-1. [You'll need to have a Redis server running in the background. I recommend doing this in Docker as it's less of a hassle (especially in Windows)](./docs/setup_instructions/i_redis.md)
-
-1. [Make a MongoDB database in Atlas](https://youtu.be/084rmLU1UgA?t=39)
+1. [Go to the developer dashboard of Spotify and create a new application there](./docs//setup_instructions/i_spotify_dev.md).
+1. [Go to the developer dashboard of Discord and make a bot there](./docs/setup_instructions/i_discord_dev.md).
+1. [You'll need to have a Redis server running in the background. I recommend doing this in Docker as it's less of a hassle (especially in Windows)](./docs/setup_instructions/i_redis.md).
+1. Setup a Lavalink server [manually](./docs/setup_instructions/i_lavalink.md) OR [using Docker for this as well](./docs/setup_instructions/i_lavalink_docker.md).
+1. [Make a MongoDB database in Atlas](https://youtu.be/084rmLU1UgA?t=39).
    - Copy your link shown around `3:09` of the video and paste it into `MONGODB_URL` in your `config.env` file.
 1. Fill out the fields in `application.yml` and `config.env` files if there's any left.
 1. Final steps to start the bot:
 
    - To make the slash commands work, run `npm run deploycommands`. You'll only have to run this once. However, if you make any changes to the command names or add/delete new ones, run this again.
-   - Run `npm run start:dev` if running the bot locally. If you're hosting it online, run `npm run start:prod`.
+   - Run `npm run start` if running the bot locally.
 
-1. [**Only needed if you're running the bot locally**] [To make your local server publicly accessible as a callback for Spotify, use ngrok. It makes your localhost available to the public](./docs/setup_instructions/i_ngrok.md)
+### **If Running Locally**
+
+[**Only needed if you're running the bot on your PC**] [To make your local server publicly accessible as a callback for Spotify, use ngrok. It makes your localhost available to the public using SSH tunnels](./docs/setup_instructions/i_ngrok.md)
 
 ## Tech Stack
 
@@ -59,3 +78,7 @@ And no, I don't have plans to host and make this a public bot for everyone. This
 1. Rate limiting on Spotify Bot API
 1. Queue music
 1. Other misc. commands not related to music (maybe?)
+
+### Note to self:
+
+- To release new versions, change tag in `docker-compose.yml`, `package.json` and README. Build the new images using `docker-compose build --no-cache`. Push it using `docker-compose push`.
