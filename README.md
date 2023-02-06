@@ -36,7 +36,7 @@ And no, I don't have plans to host and make this a public bot for everyone. This
 1. In the same folder, make a `docker-compose.yml` file and make it just like mine without changing anything inside.
 1. Final steps to start the bot:
 
-   - Open the terminal in this folder. Run `docker pull rofedl/tamashi:1.0.0`.
+   - Open the terminal in this folder.
    - Run `docker-compose up`. You might get an error (ECONNREFUSED) from Node the first time you run it. Ignore it.
    - To make the slash commands work, enter the shell of the container by running `docker-compose run tamashi-bot sh`. Then, run `npm run deploycommands`. Exit the shell using `exit` command. You'll only have to run this once. However, if you make any changes to the command names or add/delete new ones, deploy the commands again.
    - To stop the bot, just press Ctrl + C.
