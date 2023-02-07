@@ -44,7 +44,7 @@ module.exports.userAuthorizeBot = async (userHandle) => {
     state: userHandle + '-' + generateRandomString(16),
     scope: SCOPE,
     // doesnt show the prompt if already authorized, direct callback
-    show_dialog: false,
+    show_dialog: true,
   });
 
   return `${URL}/authorize?${data}`;
