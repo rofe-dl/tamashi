@@ -18,23 +18,15 @@ module.exports = {
 
   // used by official slash commands
   async execute(interaction) {
-    try {
-      await PlayService.play(
-        interaction,
-        interaction.client,
-        interaction.options.getString('phrase')
-      );
-    } catch (error) {
-      logError(error);
-    }
+    await PlayService.play(
+      interaction,
+      interaction.client,
+      interaction.options.getString('phrase')
+    );
   },
 
   // used by prefix commands
   async executedFromPrefix(message, client, args) {
-    try {
-      await PlayService.play(message, client, args);
-    } catch (error) {
-      logError(error);
-    }
+    await PlayService.play(message, client, args);
   },
 };

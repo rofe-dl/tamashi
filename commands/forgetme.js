@@ -12,19 +12,11 @@ module.exports = {
 
   // used by official slash commands
   async execute(interaction) {
-    try {
-      await ForgetMeService.forgetMe(interaction, interaction.client);
-    } catch (error) {
-      logError(error);
-    }
+    await ForgetMeService.forgetMe(interaction, interaction.client);
   },
 
   // used by prefix commands
   async executedFromPrefix(message, client, args) {
-    try {
-      await ForgetMeService.forgetMe(message, client);
-    } catch (error) {
-      logError(error);
-    }
+    await ForgetMeService.forgetMe(message, client);
   },
 };

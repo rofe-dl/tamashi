@@ -10,19 +10,11 @@ module.exports = {
 
   // used by official slash commands
   async execute(interaction) {
-    try {
-      await HelpService.printCommands(interaction, interaction.client);
-    } catch (error) {
-      logError(error);
-    }
+    await HelpService.printCommands(interaction, interaction.client);
   },
 
   // used by prefix commands
   async executedFromPrefix(message, client, args) {
-    try {
-      await HelpService.printCommands(message, client);
-    } catch (error) {
-      logError(error);
-    }
+    await HelpService.printCommands(message, client);
   },
 };

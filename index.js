@@ -37,7 +37,6 @@ function initShoukaku(client) {
 
   shoukaku.on('error', (_, error) => logError(error));
   client.shoukaku = shoukaku;
-  console.log('Connected!');
 }
 
 function initCommands(client) {
@@ -132,6 +131,9 @@ async function initRedis() {
   const REDIS_HOST = process.env.REDIS_DOCKER_HOST ?? process.env.REDIS_HOST;
   const redisClient = redis.createClient({
     url: 'redis://' + REDIS_HOST + ':' + process.env.REDIS_PORT,
+    socket: {
+      reconnectStrategy: false,
+    },
   });
 
   redisClient.on('error', (err) => logError(err));
@@ -140,7 +142,7 @@ async function initRedis() {
   await redisClient.connect();
   await redisClient.flushAll();
 
-  console.log('Connected & Flushed!');
+  console.log('Redis Connected & Flushed!');
 
   return redisClient;
 }
@@ -148,16 +150,37 @@ async function initRedis() {
 async function initDatabase() {
   process.stdout.write('Connecting to MongoDB...');
   mongoose.set('strictQuery', true); // to suppress warning
-  try {
-    await mongoose.connect(process.env.MONGODB_URL);
-    console.log('Connected!');
-  } catch {
-    logError('Could not connect to database!');
-  }
+  await mongoose.connect(process.env.MONGODB_URL);
+  console.log('MongoDB Connected!');
 }
 
 async function initClient(client) {
   console.log('Initializing the client...');
+
+  initCommands(client);
+  initShoukaku(client);
+
+  // gives some for lavalink server to start and download plugins if necessary
+  await new Promise((resolve) => setTimeout(resolve, 20 * 1000));
+
+  // triggers client.on('ready') and client.shoukaku.on('ready')
+  client.login(BOT_TOKEN);
+
+  // start the other services if Lavalink connected successfully
+  client.shoukaku.on('ready', async () => {
+    try {
+      console.log('Lavalink Connected!');
+      await initDatabase();
+      client.redis = new RedisCache(await initRedis());
+      await initServer();
+      startScheduledSpotifyCalls(client);
+
+      console.log('\nTamashi is ONLINE!');
+    } catch (error) {
+      logError(error);
+    }
+  });
+
   client.on('ready', () => {
     client.user.setActivity(
       'Type ">>help" to take a look at all my commands.',
@@ -165,20 +188,7 @@ async function initClient(client) {
         type: ActivityType.Listening,
       }
     );
-
-    console.log('\nTamashi is ONLINE!');
   });
-
-  initCommands(client);
-  initShoukaku(client);
-  await initDatabase();
-  client.redis = new RedisCache(await initRedis());
-  await initServer();
-  startScheduledSpotifyCalls(client);
-
-  // await SpotifyBotAPI.generateToken();
-
-  client.login(BOT_TOKEN);
 }
 
 const client = new Client({
@@ -193,5 +203,9 @@ const client = new Client({
 });
 
 (async () => {
-  await initClient(client);
+  try {
+    await initClient(client);
+  } catch (error) {
+    logError(error, false);
+  }
 })();

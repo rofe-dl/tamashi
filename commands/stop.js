@@ -10,19 +10,11 @@ module.exports = {
 
   // used by official slash commands
   async execute(interaction) {
-    try {
-      await PlayService.stop(interaction, interaction.client);
-    } catch (error) {
-      logError(error);
-    }
+    await PlayService.stop(interaction, interaction.client);
   },
 
   // used by prefix commands
   async executedFromPrefix(message, client, args) {
-    try {
-      await PlayService.stop(message, client);
-    } catch (error) {
-      logError(error);
-    }
+    await PlayService.stop(message, client);
   },
 };

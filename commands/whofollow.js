@@ -10,19 +10,11 @@ module.exports = {
 
   // used by official slash commands
   async execute(interaction) {
-    try {
-      await FollowService.whofollow(interaction, interaction.client);
-    } catch (error) {
-      logError(error);
-    }
+    await FollowService.whofollow(interaction, interaction.client);
   },
 
   // used by prefix commands
   async executedFromPrefix(message, client, args) {
-    try {
-      await FollowService.whofollow(message, client);
-    } catch (error) {
-      logError(error);
-    }
+    await FollowService.whofollow(message, client);
   },
 };
