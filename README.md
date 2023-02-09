@@ -37,7 +37,8 @@ And no, I don't have plans to host and make this a public bot for everyone. This
 1. Final steps to start the bot:
 
    - Open the terminal in this folder. You should have 3 files in this folder, `config.env`, `application.yml` and `docker-compose.yml`.
-   - Run `docker-compose up`. Use the `-d` flag at the end if you wanna run it in the background.
+   - Run `docker-compose pull`.
+   - To finally start the bot, run `docker-compose up`. Use the `-d` flag at the end if you wanna run it in the background.
    - To make the slash commands work, enter the shell of the container by running `docker-compose run tamashi-bot sh`. Then, run `npm run deploycommands`. Exit the shell using `exit` command. You'll only have to run this once. However, if you make any changes to the command names or add/delete new ones, deploy the commands again.
    - To stop the bot, just press Ctrl + C.
 
