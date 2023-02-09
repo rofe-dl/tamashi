@@ -65,3 +65,12 @@ module.exports.resume = async (message, client) => {
     content: 'Resumed.',
   });
 };
+
+module.exports.leave = async (message, client) => {
+  const player = client.shoukaku.getNode().players.get(message.guildId);
+  if (player) player.connection?.disconnect();
+
+  await message.reply({
+    content: Replies.LEAVE,
+  });
+};

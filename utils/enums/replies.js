@@ -7,4 +7,5 @@ module.exports = {
   BUT_NOT_FOLLOWING_ANYONE: `But I'm not following anyone in the server...`,
   ALREADY_FOLLOWING_SOMEONE: `I'm already following someone here. Please use the \`/unfollow\` command first to set me free.`,
   NOT_FOLLOWING_ANYONE: `Not following anyone at the moment.`,
+  LEAVE: `Time for me to leave I guess ; - ;`,
 };
