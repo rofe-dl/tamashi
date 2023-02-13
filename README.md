@@ -74,9 +74,6 @@ And no, I don't have plans to host and make this a public bot for everyone. This
 
 ## Improvements
 
-1. Pause the bot if user pauses Spotify
-1. Docker image for easy setup
-1. Rate limiting on Spotify Bot API
 1. Queue music
 1. Other misc. commands not related to music (maybe?)
 

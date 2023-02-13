@@ -1,5 +1,6 @@
 require('dotenv').config({ path: 'config.env' });
 const axios = require('axios');
+const { logError } = require('../../utils/logger');
 const auth = require('./auth');
 
 const URL = 'https://api.spotify.com/v1';
@@ -27,11 +28,15 @@ module.exports.UserAPI = {
     try {
       response = await axios.get(playingURL, options);
     } catch (error) {
-      if (error?.response?.status !== 200) {
-        oAuthToken = await this.regenerateToken(refreshToken);
-        options.headers.Authorization = `Bearer ${oAuthToken}`;
+      try {
+        if (error?.response?.status !== 200) {
+          oAuthToken = await this.regenerateToken(refreshToken);
+          options.headers.Authorization = `Bearer ${oAuthToken}`;
 
-        response = await axios.get(playingURL, options);
+          response = await axios.get(playingURL, options);
+        }
+      } catch (error) {
+        logError(error);
       }
     }
 
@@ -41,6 +46,7 @@ module.exports.UserAPI = {
       oAuthToken,
       progressMs: response?.data?.progress_ms,
       durationMs: response?.data?.item?.duration_ms,
+      isPaused: response?.data?.is_playing === true ? 'false' : 'true',
     };
   },
 };
