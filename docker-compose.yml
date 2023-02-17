@@ -2,7 +2,7 @@ version: '3.8'
 services:
   tamashi-bot:
     build: ./
-    image: rofedl/tamashi:1.2.0
+    image: rofedl/tamashi:1.2.1
     ports:
       - 8080:8080
     depends_on:

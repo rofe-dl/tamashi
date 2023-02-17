@@ -160,8 +160,10 @@ async function initClient(client) {
   initCommands(client);
   initShoukaku(client);
 
-  // gives some for lavalink server to start and download plugins if necessary
-  await new Promise((resolve) => setTimeout(resolve, 20 * 1000));
+  // gives some for lavalink server to start and download plugins if necessary in 'prod' environment
+  await new Promise((resolve) =>
+    setTimeout(resolve, process.env.NODE_ENV === 'dev' ? 2 * 1000 : 20 * 1000)
+  );
 
   // triggers client.on('ready') and client.shoukaku.on('ready')
   client.login(BOT_TOKEN);
