@@ -104,17 +104,21 @@ module.exports.whofollow = async (message, client) => {
 };
 
 module.exports.unfollow = async (message, client) => {
-  const user = message.author ?? message.user;
-  const userHandle = user?.username + '#' + user?.discriminator;
   const guildId = message.guildId;
 
-  const followedUser = await client.redis.getEntry(guildId);
+  const redisValue = await client.redis.getEntry(guildId);
 
-  if (followedUser?.userHandle) {
+  if (redisValue?.userHandle) {
+    const userHandleArray = redisValue.userHandle.split('#');
+    const followedUser = client.users.cache.find(
+      (user) =>
+        userHandleArray[0] + '#' + userHandleArray[1] ==
+        user.username + '#' + user.discriminator
+    );
     await client.redis.deleteEntry(guildId);
     await message.reply({
       content:
-        'No longer following @' + followedUser?.userHandle + "'s Spotify now.",
+        'No longer following ' + followedUser.toString() + "'s Spotify now.",
     });
 
     await client.shoukaku.getNode().leaveChannel(guildId);
@@ -206,10 +210,19 @@ module.exports.startScheduledSpotifyCalls = async (client) => {
               }
             } else if (response.isPaused !== redisValue.isPaused) {
               redisValue.isPaused = response.isPaused ?? false;
-              client.shoukaku
-                .getNode()
-                .players.get(guildId)
-                .setPaused(response.isPaused === 'true' ? true : false);
+              const player = client.shoukaku.getNode().players.get(guildId);
+
+              if (player)
+                player.setPaused(response.isPaused === 'true' ? true : false);
+              else {
+                await _play(
+                  guildId,
+                  redisValue.voiceChannelId,
+                  redisValue.textChannelId,
+                  client,
+                  redisValue.trackURL
+                );
+              }
 
               await client.redis.addEntry(guildId, redisValue);
             }
