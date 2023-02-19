@@ -13,7 +13,7 @@ const Errors = require('./utils/enums/errors');
 const { logError } = require('./utils/logger');
 const {
   startScheduledSpotifyCalls,
-  forcedUnfollowOnDisconnect,
+  unfollow,
 } = require('./services/followService');
 const mongoose = require('mongoose');
 const redis = require('redis');
@@ -198,7 +198,7 @@ async function initClient(client) {
   client.on('voiceStateUpdate', async (oldState, newState) => {
     // on forced disconnect, unfollow the currently following user
     if (oldState.channelId && !newState.channelId) {
-      await forcedUnfollowOnDisconnect(oldState.guild.id, client);
+      await unfollow(null, client, oldState.guild.id);
     }
   });
 }

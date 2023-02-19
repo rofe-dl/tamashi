@@ -103,8 +103,8 @@ module.exports.whofollow = async (message, client) => {
   }
 };
 
-module.exports.unfollow = async (message, client) => {
-  const guildId = message.guildId;
+module.exports.unfollow = async (message, client, guildId) => {
+  if (!guildId) guildId = message?.guildId;
 
   const redisValue = await client.redis.getEntry(guildId);
 
@@ -116,40 +116,27 @@ module.exports.unfollow = async (message, client) => {
         user.username + '#' + user.discriminator
     );
     await client.redis.deleteEntry(guildId);
-    await message.reply({
-      content:
-        'No longer following ' + followedUser.toString() + "'s Spotify now.",
-    });
+
+    if (message) {
+      await message.reply({
+        content:
+          'No longer following ' + followedUser.toString() + "'s Spotify now.",
+      });
+    } else {
+      await client.channels.cache
+        .get(redisValue.textChannelId)
+        .send(
+          'No longer following ' + followedUser.toString() + "'s Spotify now."
+        );
+    }
 
     await client.shoukaku.getNode().leaveChannel(guildId);
   } else {
-    await message.reply({
-      content: Replies.BUT_NOT_FOLLOWING_ANYONE,
-    });
-  }
-};
-
-module.exports.forcedUnfollowOnDisconnect = async (guildId, client) => {
-  if (!guildId) return;
-
-  const redisValue = await client.redis.getEntry(guildId);
-
-  if (redisValue?.userHandle) {
-    const userHandleArray = redisValue.userHandle.split('#');
-
-    const followedUser = client.users.cache.find(
-      (user) =>
-        userHandleArray[0] + '#' + userHandleArray[1] ==
-        user.username + '#' + user.discriminator
-    );
-
-    await client.redis.deleteEntry(guildId);
-
-    await client.channels.cache
-      .get(redisValue.textChannelId)
-      .send(
-        'No longer following ' + followedUser.toString() + "'s Spotify now."
-      );
+    if (message) {
+      await message.reply({
+        content: Replies.BUT_NOT_FOLLOWING_ANYONE,
+      });
+    }
   }
 };
 
