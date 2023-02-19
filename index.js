@@ -11,7 +11,10 @@ const path = require('node:path');
 const { Shoukaku, Connectors } = require('shoukaku');
 const Errors = require('./utils/enums/errors');
 const { logError } = require('./utils/logger');
-const { startScheduledSpotifyCalls } = require('./services/followService');
+const {
+  startScheduledSpotifyCalls,
+  forcedUnfollowOnDisconnect,
+} = require('./services/followService');
 const mongoose = require('mongoose');
 const redis = require('redis');
 const RedisCache = require('./utils/redisCache');
@@ -190,6 +193,13 @@ async function initClient(client) {
         type: ActivityType.Listening,
       }
     );
+  });
+
+  client.on('voiceStateUpdate', async (oldState, newState) => {
+    // on forced disconnect, unfollow the currently following user
+    if (oldState.channelId && !newState.channelId) {
+      await forcedUnfollowOnDisconnect(oldState.guild.id, client);
+    }
   });
 }
 

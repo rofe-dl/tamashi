@@ -129,6 +129,30 @@ module.exports.unfollow = async (message, client) => {
   }
 };
 
+module.exports.forcedUnfollowOnDisconnect = async (guildId, client) => {
+  if (!guildId) return;
+
+  const redisValue = await client.redis.getEntry(guildId);
+
+  if (redisValue?.userHandle) {
+    const userHandleArray = redisValue.userHandle.split('#');
+
+    const followedUser = client.users.cache.find(
+      (user) =>
+        userHandleArray[0] + '#' + userHandleArray[1] ==
+        user.username + '#' + user.discriminator
+    );
+
+    await client.redis.deleteEntry(guildId);
+
+    await client.channels.cache
+      .get(redisValue.textChannelId)
+      .send(
+        'No longer following ' + followedUser.toString() + "'s Spotify now."
+      );
+  }
+};
+
 async function _play(guildId, voiceChannelId, textChannelId, client, trackURL) {
   const node = client.shoukaku.getNode();
   const player = new MusicPlayer(client, node);
