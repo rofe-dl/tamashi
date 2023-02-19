@@ -198,7 +198,8 @@ async function initClient(client) {
   client.on('voiceStateUpdate', async (oldState, newState) => {
     // on forced disconnect, unfollow the currently following user
     if (oldState.channelId && !newState.channelId) {
-      await unfollow(null, client, oldState.guild.id);
+      if (newState.id === client.user?.id)
+        await unfollow(null, client, oldState.guild.id);
     }
   });
 }
