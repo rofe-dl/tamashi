@@ -89,12 +89,19 @@ module.exports.followUser = async (message, client) => {
 };
 
 module.exports.whofollow = async (message, client) => {
-  const followedUser = await client.redis.getEntry(message.guildId);
+  const redisValue = await client.redis.getEntry(message.guildId);
 
-  if (followedUser?.userHandle) {
+  if (redisValue?.userHandle) {
+    const userHandleArray = redisValue.userHandle.split('#');
+    const followedUser = client.users.cache.find(
+      (user) =>
+        userHandleArray[0] + '#' + userHandleArray[1] ==
+        user.username + '#' + user.discriminator
+    );
+
     await message.reply({
       content:
-        'Currently following @' + followedUser?.userHandle + "'s Spotify now.",
+        'Currently following ' + followedUser.toString() + "'s Spotify now.",
     });
   } else {
     await message.reply({
