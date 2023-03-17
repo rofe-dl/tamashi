@@ -1,6 +1,7 @@
 const { PLAY_FROM, phraseHasFlag } = require('../../utils/enums/commandflags');
 const { SpotifyBotAPI } = require('../../api/spotify/botAPI');
 const { isURL } = require('../../utils/regex');
+const { logError } = require('../../utils/logger');
 
 module.exports = class MusicPlayer {
   constructor(discordClient, shoukakuNode) {
@@ -25,7 +26,17 @@ module.exports = class MusicPlayer {
     // some spotify urls get resolved but cant be played idk why
     // so for that exception, just play from youtube
     // https://deivu.github.io/Shoukaku/classes/guild_Player.Player.html#on
-    player.on('exception', async () => {
+    player.on('exception', async (reason) => {
+      // if exception was because of a reason other than not finding the song
+      // just return
+      if (
+        reason?.exception?.cause !==
+        'java.lang.IllegalStateException: Failed to get media URL'
+      ) {
+        logError(reason);
+        return;
+      }
+
       result = await this._youtubeResolve(
         metadata.info.title.toLowerCase() +
           ' ' +

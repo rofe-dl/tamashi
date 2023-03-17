@@ -171,7 +171,6 @@ async function _play(guildId, voiceChannelId, textChannelId, client, trackURL) {
 module.exports.startScheduledSpotifyCalls = async (client) => {
   /**
    * Updates the song currently being played by each user being followed.
-   * Happens every 3 secs.
    */
   setInterval(async () => {
     // iterate over all servers bot has joined
