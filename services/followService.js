@@ -55,19 +55,23 @@ module.exports.followUser = async (message, client) => {
   const {
     trackURL,
     oAuthToken: updatedToken,
-    progressMs,
-    durationMs,
     isPaused,
   } = await UserAPI.getCurrentlyPlaying(accessToken, refreshToken);
 
-  if (trackURL && isPaused === 'false')
-    await _play(
-      guildId,
-      message.member.voice.channelId,
-      message.channelId,
-      client,
-      trackURL
-    );
+  let result;
+  if (trackURL) {
+    result = await _getResolvedTrack(client, trackURL);
+
+    if (isPaused === 'false') {
+      await _play(
+        guildId,
+        message.member.voice.channelId,
+        message.channelId,
+        client,
+        result
+      );
+    }
+  }
 
   if (updatedToken !== accessToken)
     await client.redis.updateToken(updatedToken, guildId);
@@ -79,7 +83,7 @@ module.exports.followUser = async (message, client) => {
     refreshToken,
     guildId,
     trackURL: trackURL ?? '',
-    durationMs: durationMs ?? 1,
+    durationMs: result?.tracks[0]?.info?.length ?? 1,
     voiceChannelId: message.member.voice.channelId,
     textChannelId: message.channelId,
     isPaused,
@@ -147,10 +151,7 @@ module.exports.unfollow = async (message, client, guildId) => {
   }
 };
 
-async function _play(guildId, voiceChannelId, textChannelId, client, trackURL) {
-  const node = client.shoukaku.getNode();
-  const player = new MusicPlayer(client, node);
-  const result = await player.resolve(trackURL);
+async function _play(guildId, voiceChannelId, textChannelId, client, result) {
   const metadata = result?.tracks[0];
 
   if (!result?.tracks?.length) {
@@ -159,6 +160,7 @@ async function _play(guildId, voiceChannelId, textChannelId, client, trackURL) {
       .send(Replies.SONG_NOT_FOUND);
   }
 
+  const player = new MusicPlayer(client, client.shoukaku.getNode());
   await player.play(result, guildId, voiceChannelId);
 
   await client.channels.cache
@@ -166,6 +168,14 @@ async function _play(guildId, voiceChannelId, textChannelId, client, trackURL) {
     .send(
       `Now playing \`${metadata.info.title}\` by \`${metadata.info.author}\`.\n${metadata.info.uri}`
     );
+}
+
+async function _getResolvedTrack(client, trackURL) {
+  const node = client.shoukaku.getNode();
+  const player = new MusicPlayer(client, node);
+  const result = await player.resolve(trackURL);
+
+  return result;
 }
 
 module.exports.startScheduledSpotifyCalls = async (client) => {
@@ -194,39 +204,33 @@ module.exports.startScheduledSpotifyCalls = async (client) => {
             const botProgressMs =
               client.shoukaku.getNode()?.players?.get(guildId)?.position ?? 0;
 
+            const result = await _getResolvedTrack(client, response?.trackURL);
             // song changed
             if (response?.trackURL !== redisValue.trackURL) {
-              redisValue.trackURL = response.trackURL ?? '';
-              redisValue.durationMs = response.durationMs ?? 1;
-              redisValue.isPaused = response.isPaused;
-              await client.redis.addEntry(guildId, redisValue);
-
               if (!response.trackURL || response.isPaused === 'true') return;
 
               // change track after a delay if only small part of song is left
-              if (
-                _changeSongImmediately(botProgressMs, redisValue.durationMs)
-              ) {
+              let timeOutMS = 11000;
+              if (_changeSongImmediately(botProgressMs, redisValue.durationMs))
+                timeOutMS = 0;
+
+              setTimeout(async () => {
                 await _play(
                   guildId,
                   redisValue.voiceChannelId,
                   redisValue.textChannelId,
                   client,
-                  redisValue.trackURL
+                  result
                 );
-              } else {
-                setTimeout(async () => {
-                  await _play(
-                    guildId,
-                    redisValue.voiceChannelId,
-                    redisValue.textChannelId,
-                    client,
-                    redisValue.trackURL
-                  );
-                }, 14000);
-              }
+              }, timeOutMS);
+
+              redisValue.trackURL = response.trackURL ?? '';
+              redisValue.durationMs = result?.tracks[0]?.info?.length ?? 1;
+              redisValue.isPaused = response.isPaused;
+              client.redis
+                .addEntry(guildId, redisValue)
+                .catch((err) => logError(err));
             } else if (response.isPaused !== redisValue.isPaused) {
-              redisValue.isPaused = response.isPaused ?? false;
               const player = client.shoukaku.getNode().players.get(guildId);
 
               if (player)
@@ -237,23 +241,13 @@ module.exports.startScheduledSpotifyCalls = async (client) => {
                   redisValue.voiceChannelId,
                   redisValue.textChannelId,
                   client,
-                  redisValue.trackURL
+                  result
                 );
               }
 
+              redisValue.isPaused = response.isPaused ?? false;
               await client.redis.addEntry(guildId, redisValue);
             }
-            // if a song is playing, update the progress if its greater than 8s
-            // uncommented this feature as the buffering gives a bad experience
-            // else if (
-            //   client.shoukaku.getNode().players.get(guildId).track &&
-            //   Math.abs(botProgressMs - response.progressMs) > 8000
-            // ) {
-            //   client.shoukaku
-            //     .getNode()
-            //     .players.get(guildId)
-            //     .seekTo(response.progressMs);
-            // }
           } catch (err) {
             logError(err);
           }
@@ -265,11 +259,13 @@ module.exports.startScheduledSpotifyCalls = async (client) => {
 
 /**
  * Function to determine if a song should be changed immediately or after a delay
+ * If only a small portion of the song is left, it returns false so the song
+ * is changed after finishing it entirely.
  *
  * @param {int} botProgressMs how far the bot has played the song
- * @param {int} durationMs how far the user has played the song on spotify
- * @returns {boolean} true if song should immediately or else false
+ * @param {int} durationMs total duration of the song
+ * @returns {boolean} true if song should play immediately or else false
  */
 function _changeSongImmediately(botProgressMs, durationMs) {
-  return (botProgressMs % durationMs) / durationMs <= 0.9;
+  return botProgressMs / durationMs <= 0.875;
 }
