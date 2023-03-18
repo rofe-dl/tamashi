@@ -5,6 +5,7 @@ const UserServices = require('../repository/user.services');
 const { UserAPI } = require('../api/spotify/userAPI');
 const { logError } = require('../utils/logger');
 const MusicPlayer = require('./core/musicplayer');
+require('dotenv').config({ path: 'config.env' });
 
 module.exports.followUser = async (message, client) => {
   if (!message.member.voice.channel) {
@@ -204,10 +205,13 @@ module.exports.startScheduledSpotifyCalls = async (client) => {
             const botProgressMs =
               client.shoukaku.getNode()?.players?.get(guildId)?.position ?? 0;
 
-            const result = await _getResolvedTrack(client, response?.trackURL);
             // song changed
             if (response?.trackURL !== redisValue.trackURL) {
               if (!response.trackURL || response.isPaused === 'true') return;
+              const result = await _getResolvedTrack(
+                client,
+                response?.trackURL
+              );
 
               // change track after a delay if only small part of song is left
               let timeOutMS = _getRemainingDurationToWait(
@@ -237,6 +241,10 @@ module.exports.startScheduledSpotifyCalls = async (client) => {
               if (player)
                 player.setPaused(response.isPaused === 'true' ? true : false);
               else {
+                const result = await _getResolvedTrack(
+                  client,
+                  response?.trackURL
+                );
                 await _play(
                   guildId,
                   redisValue.voiceChannelId,
@@ -255,7 +263,7 @@ module.exports.startScheduledSpotifyCalls = async (client) => {
         })
         .catch((err) => logError(err));
     }
-  }, 1000);
+  }, Number.parseInt(process.env.SPOTIFY_REQUEST_INTERVAL_MS));
 };
 
 /**

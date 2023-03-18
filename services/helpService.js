@@ -15,7 +15,7 @@ module.exports.printCommands = async (message, client) => {
 
     if (file === 'play.js') {
       commandDesc +=
-        '\n-sp for Spotify, -yt for YouTube, -sc for Soundcloud e.g /play -sp keshi drunk\nSpotify, Deezer, Apple Music, SoundCloud and YouTube links are also valid.';
+        '\n-sp for Spotify, -yt for YouTube e.g /play -sp keshi drunk\nSpotify, Deezer, Apple Music and YouTube links are also valid.';
     }
     str += `Command: \`/${commandName}\`, \nDescription: \`${commandDesc}\` \n\n`;
   }

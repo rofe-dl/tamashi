@@ -112,7 +112,7 @@ module.exports = class MusicPlayer {
   async _manualResolve(phrase, flag) {
     if (flag === PLAY_FROM.SPOTIFY)
       phrase = await SpotifyBotAPI.getSpotifyLink(phrase);
-    else if (flag === PLAY_FROM.SOUNDCLOUD) phrase = 'scsearch:' + phrase;
+    // else if (flag === PLAY_FROM.SOUNDCLOUD) phrase = 'scsearch:' + phrase;
     else if (flag === PLAY_FROM.YOUTUBE) phrase = 'ytsearch:' + phrase;
 
     if (phrase) return await this._defaultResolve(phrase);

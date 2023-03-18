@@ -10,17 +10,17 @@ And no, I don't have plans to host and make this a public bot for everyone. This
 
 ## Key Commands
 
-| Command      | Description                                                                                                                                                                                                                                              |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/help`      | Lists all the commands.                                                                                                                                                                                                                                  |
-| `/followme`  | Makes the bot track what you're currently playing on Spotify!                                                                                                                                                                                            |
-| `/unfollow`  | Makes the bot stop tracking the current user's Spotify.                                                                                                                                                                                                  |
-| `/whofollow` | Tells you who the bot is following.                                                                                                                                                                                                                      |
-| `/forgetme`  | Makes the bot forget your data so you can reauthorize it to access your Spotify again.                                                                                                                                                                   |
-| `/play`      | Play a song using a search phrase or URL. To specify a source, use -flags before the phrase. -sp for Spotify, -yt for YouTube, -sc for Soundcloud e.g /play -sp keshi drunk . Spotify, Deezer, Apple Music, SoundCloud and YouTube links are also valid. |
-| `/pause`     | Pauses the currently playing song.                                                                                                                                                                                                                       |
-| `/resume`    | Resumes the currently playing song if it's paused.                                                                                                                                                                                                       |
-| `/stop`      | Stops the currently playing song.                                                                                                                                                                                                                        |
+| Command      | Description                                                                                                                                                                                                              |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/help`      | Lists all the commands.                                                                                                                                                                                                  |
+| `/followme`  | Makes the bot track what you're currently playing on Spotify!                                                                                                                                                            |
+| `/unfollow`  | Makes the bot stop tracking the current user's Spotify.                                                                                                                                                                  |
+| `/whofollow` | Tells you who the bot is following.                                                                                                                                                                                      |
+| `/forgetme`  | Makes the bot forget your data so you can reauthorize it to access your Spotify again.                                                                                                                                   |
+| `/play`      | Play a song using a search phrase or URL. To specify a source, use -flags before the phrase. -sp for Spotify, -yt for YouTube e.g /play -sp keshi drunk . Spotify, Deezer, Apple Music and YouTube links are also valid. |
+| `/pause`     | Pauses the currently playing song.                                                                                                                                                                                       |
+| `/resume`    | Resumes the currently playing song if it's paused.                                                                                                                                                                       |
+| `/stop`      | Stops the currently playing song.                                                                                                                                                                                        |
 
 ## How do I set this up?
 
