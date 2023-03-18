@@ -210,9 +210,10 @@ module.exports.startScheduledSpotifyCalls = async (client) => {
               if (!response.trackURL || response.isPaused === 'true') return;
 
               // change track after a delay if only small part of song is left
-              let timeOutMS = 11000;
-              if (_changeSongImmediately(botProgressMs, redisValue.durationMs))
-                timeOutMS = 0;
+              let timeOutMS = _getRemainingDurationToWait(
+                botProgressMs,
+                redisValue.durationMs
+              );
 
               setTimeout(async () => {
                 await _play(
@@ -258,14 +259,17 @@ module.exports.startScheduledSpotifyCalls = async (client) => {
 };
 
 /**
- * Function to determine if a song should be changed immediately or after a delay
- * If only a small portion of the song is left, it returns false so the song
- * is changed after finishing it entirely.
+ * Returns the duration in ms to wait before playing the next song.
+ * If a big part of the song is left, just change immediately as it is
+ * likely the user changed the song on purpose. Otherwise, it was queued and
+ * the bot should wait to finish the current song.
  *
  * @param {int} botProgressMs how far the bot has played the song
  * @param {int} durationMs total duration of the song
  * @returns {boolean} true if song should play immediately or else false
  */
-function _changeSongImmediately(botProgressMs, durationMs) {
-  return botProgressMs / durationMs <= 0.875;
+function _getRemainingDurationToWait(botProgressMs, durationMs) {
+  const ratio = botProgressMs / durationMs;
+  if (ratio <= 0.85) return 0;
+  else return Math.abs(durationMs - botProgressMs);
 }
