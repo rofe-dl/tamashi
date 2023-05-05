@@ -84,7 +84,6 @@ module.exports.followUser = async (message, client) => {
     refreshToken,
     guildId,
     trackURL: trackURL ?? '',
-    durationMs: result?.tracks[0]?.info?.length ?? 1,
     voiceChannelId: message.member.voice.channelId,
     textChannelId: message.channelId,
     isPaused,
@@ -143,12 +142,10 @@ module.exports.unfollow = async (message, client, guildId) => {
     }
 
     await client.shoukaku.getNode().leaveChannel(guildId);
-  } else {
-    if (message) {
-      await message.reply({
-        content: Replies.BUT_NOT_FOLLOWING_ANYONE,
-      });
-    }
+  } else if (message) {
+    await message.reply({
+      content: Replies.BUT_NOT_FOLLOWING_ANYONE,
+    });
   }
 };
 
@@ -202,9 +199,6 @@ module.exports.startScheduledSpotifyCalls = async (client) => {
               await client.redis.updateToken(response.oAuthToken, guildId);
             }
 
-            const botProgressMs =
-              client.shoukaku.getNode()?.players?.get(guildId)?.position ?? 0;
-
             // song changed
             if (response?.trackURL !== redisValue.trackURL) {
               if (!response.trackURL || response.isPaused === 'true') return;
@@ -213,24 +207,15 @@ module.exports.startScheduledSpotifyCalls = async (client) => {
                 response?.trackURL
               );
 
-              // change track after a delay if only small part of song is left
-              let timeOutMS = _getRemainingDurationToWait(
-                botProgressMs,
-                redisValue.durationMs
+              await _play(
+                guildId,
+                redisValue.voiceChannelId,
+                redisValue.textChannelId,
+                client,
+                result
               );
 
-              setTimeout(async () => {
-                await _play(
-                  guildId,
-                  redisValue.voiceChannelId,
-                  redisValue.textChannelId,
-                  client,
-                  result
-                );
-              }, timeOutMS);
-
               redisValue.trackURL = response.trackURL ?? '';
-              redisValue.durationMs = result?.tracks[0]?.info?.length ?? 1;
               redisValue.isPaused = response.isPaused;
               client.redis
                 .addEntry(guildId, redisValue)
@@ -265,19 +250,3 @@ module.exports.startScheduledSpotifyCalls = async (client) => {
     }
   }, Number.parseInt(process.env.SPOTIFY_REQUEST_INTERVAL_MS));
 };
-
-/**
- * Returns the duration in ms to wait before playing the next song.
- * If a big part of the song is left, just change immediately as it is
- * likely the user changed the song on purpose. Otherwise, it was queued and
- * the bot should wait to finish the current song.
- *
- * @param {int} botProgressMs how far the bot has played the song
- * @param {int} durationMs total duration of the song
- * @returns {boolean} true if song should play immediately or else false
- */
-function _getRemainingDurationToWait(botProgressMs, durationMs) {
-  const ratio = botProgressMs / durationMs;
-  if (ratio <= 0.85) return 0;
-  else return Math.abs(durationMs - botProgressMs);
-}
