@@ -2,7 +2,7 @@
   "token": "",
   "clientId": "",
   "port": 8080,
-  "NODE_ENV": "dev",
+  "NODE_ENV": "development",
   "webhookURL": "",
   "avatarURL": "",
   "spotify": {
