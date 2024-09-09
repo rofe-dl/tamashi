@@ -1,4 +1,5 @@
 config.env
+config.json
 application.yml
 
 # Logs

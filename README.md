@@ -2,6 +2,8 @@
 
 ![tamashi_img](./docs/tamashi.jpg)
 
+**_(CURRENTLY IN DEVELOPMENT FOR v2. WONT WORK.)_**
+
 A discord bot that can follow what a Spotify user is listening to and play it in a voice channel so everyone can listen in simultaneously. Although this feature already exists in Discord with the Spotify integration (Listen Along), only premium Spotify users get to use it. This bot can be a viable alternative.
 
 Apart from that, it also supports manually playing songs with the `/play` command. To see all the commands, use `/help`.
