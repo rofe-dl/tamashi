@@ -14,7 +14,8 @@
     "typeRoots": ["node_modules/@types/", "src/types/"],
     "noImplicitOverride": true,
     "esModuleInterop": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "resolveJsonModule": true
   },
   "include": ["./src/**/*"],
   "ts-node": {
