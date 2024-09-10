@@ -6,6 +6,8 @@ export default {
     .setDescription('Says hello back! :D'),
 
   async execute(interaction: ChatInputCommandInteraction): Promise<void> {
-    await interaction.reply('stfu');
+    const userId = interaction.user.id;
+    console.log(userId)
+    await interaction.reply(`<@${userId}> is the GOAT`);
   },
 };
