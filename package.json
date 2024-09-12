@@ -12,6 +12,7 @@
   "license": "GNU GPLv3",
   "dependencies": {
     "@discordjs/opus": "^0.9.0",
+    "@types/redis": "^4.0.10",
     "axios": "^1.7.7",
     "discord.js": "^14.16.1",
     "dotenv": "^16.0.3",
