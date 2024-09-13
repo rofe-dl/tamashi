@@ -15,7 +15,7 @@ const client = new Client({
 });
 
 
-const redis = new RedisClient('redis://localhost:6379');
+const redis = RedisClient.getInstance();
 
 (async () => {
   try {
