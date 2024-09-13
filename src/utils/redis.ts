@@ -2,13 +2,23 @@ import { createClient, RedisClientType } from 'redis';
 import logger from './logger';
 
 class RedisClient {
+    private static instance: RedisClient; // Singleton instance
     private client: RedisClientType;
     private isConnected: boolean = false;
 
-    constructor(url: string) {
+    private constructor(url: string) {
         this.client = createClient({ url });
-        this.client.on('error', (err) => logger.error('Redis Error:', err));
+        this.client.on('error', (err) => logger.error('Redis Client Error', err));
     }
+
+    static getInstance(url: string = 'redis://localhost:6379'): RedisClient {
+        if (!RedisClient.instance) {
+            RedisClient.instance = new RedisClient(url);
+        }
+        return RedisClient.instance;
+    }
+
+    public getClient(): RedisClientType { return this.client; }
 
     // Connect to Redis
     async connect(): Promise<void> {
