@@ -30,7 +30,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   try {
     logger.info(`Executing ${interaction.commandName}`)
-    console.log(`Executing ${interaction.commandName}`)
     await command.execute(interaction);
 
   } catch (error) {

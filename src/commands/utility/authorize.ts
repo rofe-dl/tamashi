@@ -8,6 +8,11 @@ export default {
 
     async execute(interaction: ChatInputCommandInteraction): Promise<void> {
         const userId = interaction.user.id;
-        await interaction.reply(`Login at ${ngrokURL}/login?userId=${userId}`);
+        const contentString = `Login at ${ngrokURL}/login?userId=${userId}`
+        await interaction.reply({
+            content: contentString,
+            ephemeral: true,
+        })
     },
+
 };

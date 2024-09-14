@@ -7,7 +7,6 @@ export default {
 
   async execute(interaction: ChatInputCommandInteraction): Promise<void> {
     const userId = interaction.user.id;
-    console.log(userId)
     await interaction.reply(`<@${userId}> is the GOAT`);
   },
 };
