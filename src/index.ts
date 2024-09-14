@@ -1,8 +1,9 @@
 import { Client, Events, GatewayIntentBits, Collection } from 'discord.js';
-import { token } from './config.json';
+import { token, redis } from './config.json';
 import logger from 'utils/logger';
 import { loadCommands } from 'utils/loader';
 import RedisClient from 'utils/redis';
+
 
 const client = new Client({
   intents: [
@@ -14,13 +15,13 @@ const client = new Client({
   ],
 });
 
-
-const redis = RedisClient.getInstance();
+const redisUrl = `redis://${redis.host}:${redis.port}`;
+const redisInstance = RedisClient.getInstance(redisUrl);
 
 (async () => {
   try {
     // Connect to Redis
-    await redis.connect();
+    await redisInstance.connect();
     logger.info("Connected to Redis.");
 
     // triggers client.once(ClientReady)
