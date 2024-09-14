@@ -1,6 +1,7 @@
 import { createClient, RedisClientType } from 'redis';
 import logger from './logger';
 
+
 class RedisClient {
     private static instance: RedisClient; // Singleton instance
     private client: RedisClientType;
@@ -11,7 +12,7 @@ class RedisClient {
         this.client.on('error', (err) => logger.error('Redis Client Error', err));
     }
 
-    static getInstance(url: string = 'redis://localhost:6379'): RedisClient {
+    static getInstance(url: string): RedisClient {
         if (!RedisClient.instance) {
             RedisClient.instance = new RedisClient(url);
         }
