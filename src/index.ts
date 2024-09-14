@@ -2,6 +2,7 @@ import { Client, Events, GatewayIntentBits, Collection } from 'discord.js';
 import { token } from './config.json';
 import logger from 'utils/logger';
 import { loadCommands } from 'utils/loader';
+import RedisClient from 'utils/redis';
 
 const client = new Client({
   intents: [
@@ -12,6 +13,23 @@ const client = new Client({
     GatewayIntentBits.GuildVoiceStates,
   ],
 });
+
+const redisInstance = RedisClient.getInstance();
+
+(async () => {
+  try {
+    // Connect to Redis
+
+    await redisInstance.connect();
+    await redisInstance.flush();
+    logger.info('Connected to Redis.');
+
+    // triggers client.once(ClientReady)
+    client.login(token);
+  } catch (error) {
+    logger.error(error);
+  }
+})();
 
 loadCommands(client);
 
@@ -55,6 +73,3 @@ client.on(Events.InteractionCreate, async (interaction) => {
 client.once(Events.ClientReady, (readyClient) => {
   logger.info(`Ready! Logged in as ${readyClient.user.tag}`);
 });
-
-// triggers client.once(ClientReady)
-client.login(token);
