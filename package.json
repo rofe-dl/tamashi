@@ -5,7 +5,8 @@
   "main": "index.ts",
   "scripts": {
     "start": "nodemon",
-    "deploycommands": "node deploycommands.js",
+    "deploycommands": "npx ts-node ./src/deploy.commands.ts",
+    "deletecommands": "npx ts-node ./src/delete.commands.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "MMM",
