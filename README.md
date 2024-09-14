@@ -2,7 +2,7 @@
 
 ![tamashi_img](./docs/tamashi.jpg)
 
-**_(CURRENTLY IN DEVELOPMENT FOR v2. WONT WORK.)_**
+**_(CURRENTLY IN DEVELOPMENT FOR v2. SO IT WONT WORK AT THE MOMENT.)_**
 
 A discord bot that can follow what a Spotify user is listening to and play it in a voice channel so everyone can listen in simultaneously. Although this feature already exists in Discord with the Spotify integration (Listen Along), only premium Spotify users get to use it. This bot can be a viable alternative.
 
@@ -24,7 +24,7 @@ And no, I don't have plans to host and make this a public bot for everyone. This
 | `/resume`    | Resumes the currently playing song if it's paused.                                                                                                                                                                       |
 | `/stop`      | Stops the currently playing song.                                                                                                                                                                                        |
 
-## How do I set this up?
+<!-- ## How do I set this up?
 
 ### **Using Docker (the easy way)**
 
@@ -62,7 +62,7 @@ And no, I don't have plans to host and make this a public bot for everyone. This
 
 ### **If Running Locally**
 
-[**Only needed if you're running the bot on your PC**] [To make your local server publicly accessible as a callback for Spotify, use ngrok. It makes your localhost available to the public using SSH tunnels](./docs/setup_instructions/i_ngrok.md)
+[**Only needed if you're running the bot on your PC**] [To make your local server publicly accessible as a callback for Spotify, use ngrok. It makes your localhost available to the public using SSH tunnels](./docs/setup_instructions/i_ngrok.md) -->
 
 ## Tech Stack
 
@@ -74,10 +74,10 @@ And no, I don't have plans to host and make this a public bot for everyone. This
 - Lavalink
 - Docker
 
-## Improvements
+<!-- ## Improvements
 
 1. Queue music
-1. Other misc. commands not related to music (maybe?)
+1. Other misc. commands not related to music (maybe?) -->
 
 ### Note to self:
 
