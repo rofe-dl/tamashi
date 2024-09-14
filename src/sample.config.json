@@ -1,9 +1,11 @@
 {
   "token": "",
   "clientId": "",
+  "guildId": "",
   "port": 8080,
   "NODE_ENV": "development",
   "webhookURL": "",
+  "ngrokURL": "",
   "avatarURL": "",
   "spotify": {
     "clientId": "",
