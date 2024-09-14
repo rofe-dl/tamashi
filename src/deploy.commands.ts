@@ -1,5 +1,5 @@
 import { REST, Routes } from 'discord.js';
-import { clientId, token } from 'config.json';
+import { clientId, token, guildId, NODE_ENV } from 'config.json';
 import path from 'node:path';
 import fs from 'node:fs';
 import logger from 'utils/logger';
@@ -48,10 +48,22 @@ const rest = new REST().setToken(token);
       `Started refreshing ${commands.length} application (/) commands.`,
     );
 
-    // The put method is used to fully refresh all commands in the guild with the current set
-    const data: any = await rest.put(Routes.applicationCommands(clientId), {
-      body: commands,
-    });
+    let data: any;
+
+    if (NODE_ENV === 'production') {
+      data = await rest.put(Routes.applicationCommands(clientId), {
+        body: commands,
+      });
+    } else {
+      if (!guildId) throw new Error('Guild ID not found in config file');
+
+      data = await rest.put(
+        Routes.applicationGuildCommands(clientId, guildId),
+        {
+          body: commands,
+        },
+      );
+    }
 
     logger.info(
       `Successfully reloaded ${data.length} application (/) commands.`,
