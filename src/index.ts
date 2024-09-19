@@ -3,10 +3,8 @@ import { token, port } from './config.json';
 import logger from 'utils/logger';
 import { loadCommands } from 'utils/loader';
 import RedisClient from 'utils/redis';
-import authApp from './auth.server'
-import http from 'http'
-
-
+import authApp from './auth.server';
+import { connectDB } from 'db';
 
 const client = new Client({
   intents: [
@@ -18,15 +16,23 @@ const client = new Client({
   ],
 });
 
-const redisInstance = RedisClient.getInstance();
-
+/**
+ * Program and all relevant services start here.
+ */
 (async () => {
   try {
     // Connect to Redis
-
+    const redisInstance = RedisClient.getInstance();
     await redisInstance.connect();
     await redisInstance.flush();
-    logger.info('Connected to Redis.');
+
+    // Connect to DB
+    await connectDB();
+
+    // Start the server for Spotify authorization
+    authApp.listen(port, () => {
+      logger.info(`Auth server running on port ${port}`);
+    });
 
     // triggers client.once(ClientReady)
     client.login(token);
@@ -43,17 +49,15 @@ client.on(Events.InteractionCreate, async (interaction) => {
   const command = interaction.client.commands.get(interaction.commandName);
 
   if (!command) {
-    logger.error(
-      new Error(`No command matching ${interaction.commandName} was found.`),
-    );
+    logger.error(new Error(`No command matching ${interaction.commandName} was found.`));
 
     return;
   }
 
+  // In case any of the commands ever throw an uncaught error
   try {
-    logger.info(`Executing ${interaction.commandName}`)
+    logger.debug(`Executing ${interaction.commandName}`);
     await command.execute(interaction);
-
   } catch (error) {
     logger.error(error);
 
@@ -73,12 +77,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-
-
 // when the client is ready, this callback is run only once
 client.once(Events.ClientReady, (readyClient) => {
   logger.info(`Ready! Logged in as ${readyClient.user.tag}`);
-  authApp.listen(port, () => {
-    logger.info(`Auth server running on port ${port}`)
-  })
 });
