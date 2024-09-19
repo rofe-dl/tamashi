@@ -1,8 +1,12 @@
 import { Client, Events, GatewayIntentBits, Collection } from 'discord.js';
-import { token } from './config.json';
+import { token, port } from './config.json';
 import logger from 'utils/logger';
 import { loadCommands } from 'utils/loader';
 import RedisClient from 'utils/redis';
+import authApp from './auth.server'
+import http from 'http'
+
+
 
 const client = new Client({
   intents: [
@@ -47,7 +51,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 
   try {
+    logger.info(`Executing ${interaction.commandName}`)
     await command.execute(interaction);
+
   } catch (error) {
     logger.error(error);
 
@@ -67,7 +73,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
+
+
 // when the client is ready, this callback is run only once
 client.once(Events.ClientReady, (readyClient) => {
   logger.info(`Ready! Logged in as ${readyClient.user.tag}`);
+  authApp.listen(port, () => {
+    logger.info(`Auth server running on port ${port}`)
+  })
 });
