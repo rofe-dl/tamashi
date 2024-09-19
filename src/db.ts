@@ -33,7 +33,7 @@ const userDataSchema: Schema<IUserData> = new Schema({
     }
 });
 
-const userDataModel: Model<IUserData> = mongoose.model<IUserData>('userRefreshToken', userDataSchema);
+const userDataModel: Model<IUserData> = mongoose.model<IUserData>('UserData', userDataSchema);
 
 const storeRefreshToken = async (discordUserId: string, refreshToken: string): Promise<void> => {
     try {
