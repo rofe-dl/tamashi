@@ -6,12 +6,11 @@
   "NODE_ENV": "development",
   "webhookURL": "",
   "ngrokURL": "",
+  "serverURL": "http://188.166.223.166:8080",
   "avatarURL": "",
   "spotify": {
     "clientId": "",
     "clientSecret": "",
-    "redirectDevURL": "",
-    "redirectProdURL": "",
     "requestIntervalMs": 2000
   },
   "lavalink": {
