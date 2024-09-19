@@ -9,7 +9,8 @@ class RedisClient {
 
   private constructor() {
     this.client = createClient({
-      url: `redis://${redis.host}:${redis.port}`,
+      // if running inside Docker, it'll use the host defined in docker compose file
+      url: `redis://${process.env.REDIS_DOCKER_HOST || redis.host}:${redis.port}`,
       socket: { reconnectStrategy: false },
     });
     this.client.on('error', (err) => logger.error('Redis Client Error', err));
@@ -30,6 +31,8 @@ class RedisClient {
     if (!this.isConnected) {
       await this.client.connect();
       this.isConnected = true;
+
+      logger.info('Redis connected successfully');
     } else {
       logger.info('Redis is already connected.');
     }
@@ -56,7 +59,7 @@ class RedisClient {
       if (!key || !value) throw new Error('Cannot set key/value as null');
 
       await this.client.set(key, value);
-      logger.info(`Set key ${key} to ${value} successfully.`);
+      logger.debug(`Set key ${key} to ${value} successfully.`);
     } catch (error) {
       logger.error(`Error setting key ${key}:`, error);
     }
@@ -67,7 +70,7 @@ class RedisClient {
       if (key == null) return null;
 
       const value = await this.client.get(key);
-      logger.info(`Retrieved key ${key} successfully.`);
+      logger.debug(`Retrieved key ${key} successfully.`);
 
       return value;
     } catch (error) {
@@ -81,7 +84,7 @@ class RedisClient {
       if (key == null) throw new Error('Cannot remove key as null');
 
       await this.client.del(key);
-      logger.info(`Removed key ${key} successfully.`);
+      logger.debug(`Removed key ${key} successfully.`);
     } catch (error) {
       logger.error(`Error removing key ${key}:`, error);
     }
