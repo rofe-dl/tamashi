@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser';
 // import cors from 'cors';
 import { URLSearchParams } from 'url';
 import { connectDB, storeRefreshToken } from './db';
-import { ngrokURL, spotify } from './config.json';
+import { ngrokURL, spotify, port } from './config.json';
 import logger from './utils/logger';
 
 const client_id = spotify.clientId;
@@ -31,7 +31,17 @@ app.get('/login', (req, res) => {
     res.cookie(stateKey, state);
     res.cookie("userId", userId);
 
-    const scope = 'user-read-private user-read-email';
+    const scope = [
+        'user-read-private',
+        'user-read-email',
+        'user-read-currently-playing',
+        'user-read-playback-state',
+        'user-modify-playback-state',
+        'user-read-playback-position',
+        'playlist-read-collaborative',
+        'playlist-read-private'
+    ].join(' ');
+
     const queryParams = new URLSearchParams({
         response_type: 'code',
         client_id: client_id,
@@ -108,6 +118,8 @@ app.get('/callback', async (req, res) => {
     }
 });
 
-app.listen(9000, () => {
-    logger.info("listening on port 9000");
-});
+// app.listen(port, () => {
+//     logger.info(`listening on port ${port}`);
+// });
+
+export default app;

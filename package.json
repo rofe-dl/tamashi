@@ -8,7 +8,7 @@
     "deploycommands": "npx ts-node ./src/deploy.commands.ts",
     "deletecommands": "npx ts-node ./src/delete.commands.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "auth": "ts-node ./src/auth.ts"
+    "auth": "ts-node ./src/auth.server.ts"
   },
   "author": "MMM",
   "license": "GNU GPLv3",
