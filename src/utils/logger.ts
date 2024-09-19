@@ -7,14 +7,17 @@ const winstonConfig = {
   levels: {
     error: 0,
     info: 1,
+    debug: 2,
   },
   colors: {
     error: 'bold underline redBG',
     info: 'underline green',
+    debug: 'bold cyan',
   },
   toStrings: {
     error: 'Error',
     info: 'Info',
+    debug: 'Debug',
   },
 };
 
@@ -34,16 +37,14 @@ class DiscordWebhook extends Transport {
 const logger: Logger = winston.createLogger({
   silent: config.NODE_ENV === 'test', // wont log in test environments
   levels: winstonConfig.levels,
-  level: 'info',
+  level: 'debug',
   format: format.combine(
     format.errors({ stack: true }),
     format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     format.printf((info: Logform.TransformableInfo) => {
       let levelAsString: string = info.level.toString();
       levelAsString =
-        winstonConfig.toStrings[
-          levelAsString as keyof typeof winstonConfig.toStrings
-        ];
+        winstonConfig.toStrings[levelAsString as keyof typeof winstonConfig.toStrings];
 
       let printFormat = `(${config.NODE_ENV?.toUpperCase()}) ${
         info.timestamp
