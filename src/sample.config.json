@@ -1,10 +1,10 @@
 {
-  "token": "",
-  "clientId": "",
-  "guildId": "",
+  "token": "your discord bot token",
+  "clientId": "your discord bot application id",
+  "guildId": "needed if you wanna test it out in your own server first in development mode",
   "port": 8080,
   "NODE_ENV": "development",
-  "webhookURL": "",
+  "webhookURL": "optional",
   "ngrokURL": "",
   "serverURL": "http://188.166.223.166:8080",
   "avatarURL": "",
@@ -14,7 +14,7 @@
     "requestIntervalMs": 2000
   },
   "lavalink": {
-    "password": "",
+    "password": "any value, must match the one in application.yml",
     "host": "localhost",
     "port": 2333
   },
