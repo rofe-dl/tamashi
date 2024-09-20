@@ -11,8 +11,8 @@ const winstonConfig = {
   },
   colors: {
     error: 'bold underline redBG',
-    info: 'underline green',
-    debug: 'bold cyan',
+    info: 'bold underline green',
+    debug: 'white',
   },
   toStrings: {
     error: 'Error',
