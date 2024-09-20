@@ -51,7 +51,7 @@ export const play = async (
   if (!isURL(searchPhrase)) searchPhrase = 'ytmsearch: ' + searchPhrase;
   let result = await node?.rest.resolve(searchPhrase);
 
-  if (result?.loadType !== LoadType.SEARCH && result?.loadType === LoadType.TRACK) {
+  if (result?.loadType !== LoadType.SEARCH && result?.loadType !== LoadType.TRACK) {
     searchPhrase = searchPhrase.replace('ytmsearch', 'ytsearch') + ' lyrics';
   }
 
