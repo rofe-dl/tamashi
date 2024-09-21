@@ -120,6 +120,7 @@ function decorateEmbed(
   embedObject: typeof songInfoEmbed,
   track: Track,
 ): typeof songInfoEmbed {
+  embedObject.color = randomHexColorCode();
   embedObject.title = track.info.title;
   embedObject.url = track.info.uri || '';
   embedObject.description = track.info.author;
@@ -168,3 +169,8 @@ export enum PlayerCommand {
   RESUME = 'resume',
   STOP = 'stop',
 }
+
+const randomHexColorCode = (): number => {
+  let n = (Math.random() * 0xfffff * 1000000).toString(16);
+  return Number('0x' + n.slice(0, 6));
+};
