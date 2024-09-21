@@ -18,7 +18,7 @@ export const play = async (
 
   if (!guildMember?.voice?.channel?.id) {
     await interaction.reply({
-      content: 'Join a voice channel to play something >:(',
+      content: `You're not connected to any voice channel! >:(`,
       ephemeral: true,
     });
 
@@ -53,9 +53,8 @@ export const play = async (
 
   if (result?.loadType !== LoadType.SEARCH && result?.loadType !== LoadType.TRACK) {
     searchPhrase = searchPhrase.replace('ytmsearch', 'ytsearch') + ' lyrics';
+    result = await node?.rest.resolve(searchPhrase);
   }
-
-  result = await node?.rest.resolve(searchPhrase);
 
   // logger.debug(JSON.stringify(result, null, 2));
 
@@ -86,6 +85,13 @@ export const play = async (
     player.playTrack({ track: { encoded: track.encoded } }),
   ]);
 
+  // if the bot is force disconnected, delete the player
+  player.on('closed', (reason) => {
+    shoukaku.players.delete(interaction.guildId as string);
+    shoukaku.leaveVoiceChannel(interaction.guildId as string);
+    player.destroy();
+  });
+
   // TODO: Implement pause/play/stop buttons
 };
 
@@ -96,8 +102,8 @@ export const changePlayerState = async (
 ) => {
   const guildMember = interaction.member as GuildMember;
 
-  if (!guildMember.voice.channel) {
-    await interaction.reply(`You're not connected to any voice channel!`);
+  if (!guildMember?.voice?.channel?.id) {
+    await interaction.reply(`You're not connected to any voice channel! >:(`);
     return;
   }
 
