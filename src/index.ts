@@ -1,10 +1,11 @@
 import { Client, Events, GatewayIntentBits, Collection } from 'discord.js';
-import { token, port } from './config.json';
+import { token, port, lavalink } from './config.json';
 import logger from 'utils/logger';
 import { loadCommands } from 'utils/loader';
 import RedisClient from 'utils/redis';
 import authApp from './auth.server';
 import { connectDB } from 'db';
+import { Connectors, Shoukaku } from 'shoukaku';
 
 const client = new Client({
   intents: [
@@ -30,9 +31,24 @@ const client = new Client({
     await connectDB();
 
     // Start the server for Spotify authorization
-    authApp.listen(port, () => {
-      logger.info(`Auth server running on port ${port}`);
+    await new Promise((resolve, reject) => {
+      authApp.listen(port, () => {
+        resolve(logger.info(`Auth server running on port ${port}`));
+      });
     });
+
+    // Connect to Lavalink with Shoukaku
+    const nodes = [
+      {
+        name: 'Lavalink Server',
+        url: `${process.env.LAVALINK_DOCKER_HOST || lavalink.host}:${lavalink.port}`,
+        auth: lavalink.password,
+      },
+    ];
+
+    client.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), nodes);
+    client.shoukaku.on('error', (_, err) => logger.error('Shoukaku Error: ', err));
+    logger.info('Lavalink connected successfully');
 
     // triggers client.once(ClientReady)
     client.login(token);
@@ -43,37 +59,45 @@ const client = new Client({
 
 loadCommands(client);
 
+// sets the callback for when a slash command event is triggered
 client.on(Events.InteractionCreate, async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+  if (interaction.isChatInputCommand()) {
+    const command = interaction.client.commands.get(interaction.commandName);
 
-  const command = interaction.client.commands.get(interaction.commandName);
+    if (!command) {
+      logger.error(
+        new Error(`No command matching ${interaction.commandName} was found.`),
+      );
 
-  if (!command) {
-    logger.error(new Error(`No command matching ${interaction.commandName} was found.`));
-
-    return;
-  }
-
-  // In case any of the commands ever throw an uncaught error
-  try {
-    logger.debug(`Executing ${interaction.commandName}`);
-    await command.execute(interaction);
-  } catch (error) {
-    logger.error(error);
-
-    // if an interaction was already replied to but an error occurred afterwards, we follow up to that interaction
-    // otherwise we just reply to it
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({
-        content: 'I might have made an oopsies...',
-        ephemeral: true,
-      });
-    } else {
-      await interaction.reply({
-        content: 'I might have made an oopsies...',
-        ephemeral: true,
-      });
+      return;
     }
+
+    // In case any of the commands ever throw an uncaught error
+    try {
+      logger.debug(`Executing ${interaction.commandName}`);
+      await command.execute(interaction);
+    } catch (error) {
+      logger.error(error);
+
+      // if an interaction was already replied to but an error occurred afterwards, we follow up to that interaction
+      // otherwise we just reply to it
+      if (interaction.deferred) {
+        await interaction.editReply({
+          content: 'I might have made an oopsies...',
+        });
+      } else if (interaction.replied) {
+        await interaction.followUp({
+          content: 'I might have made an oopsies...',
+        });
+      } else {
+        await interaction.reply({
+          content: 'I might have made an oopsies...',
+          ephemeral: true,
+        });
+      }
+    }
+  } else if (interaction.isButton()) {
+    // TODO: Implement buttons later
   }
 });
 

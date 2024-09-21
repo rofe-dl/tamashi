@@ -11,8 +11,8 @@ const winstonConfig = {
   },
   colors: {
     error: 'bold underline redBG',
-    info: 'underline green',
-    debug: 'bold cyan',
+    info: 'bold underline green',
+    debug: 'white',
   },
   toStrings: {
     error: 'Error',
@@ -78,19 +78,20 @@ function notifyDiscord(err: Logform.TransformableInfo): void {
     2,
   ).replace(/\\n/g, '\n'); // replaces '\n' with actual line breaks
 
-  axios
-    .post(
-      config.webhookURL as string,
-      {
-        content: `\`\`\`json\n${body}\n\`\`\``,
-        username: 'Tamashi [' + config.NODE_ENV + ']',
-        avatar_url: config.avatarURL as string,
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    )
-    .catch((err) => {});
+  if (config.webhookURL)
+    axios
+      .post(
+        config.webhookURL as string,
+        {
+          content: `\`\`\`json\n${body}\n\`\`\``,
+          username: 'Tamashi [' + config.NODE_ENV + ']',
+          avatar_url: config.avatarURL as string,
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+        },
+      )
+      .catch((err) => {});
 }
 
 export default logger;

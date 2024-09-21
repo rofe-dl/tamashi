@@ -13,7 +13,7 @@ class RedisClient {
       url: `redis://${process.env.REDIS_DOCKER_HOST || redis.host}:${redis.port}`,
       socket: { reconnectStrategy: false },
     });
-    this.client.on('error', (err) => logger.error('Redis Client Error', err));
+    this.client.on('error', (err) => logger.error('Redis Client Error: ', err));
   }
 
   static getInstance(): RedisClient {
