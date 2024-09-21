@@ -36,7 +36,7 @@ And no, I don't have plans to host and make this a public bot for everyone. This
 1. Clone the repo and run `npm i` in this directory.
 1. Make a file called `application.yml` and copy the contents from `sample.lavalink.application.yml` into it. Fill up the fields marked `#INPUT` with your own values.
 1. Make a file called `config.json` in ./src folder and fill it with your info just like in `sample.config.json`.
-1. Run `docker compose up` in the project directory.
+1. Run `docker compose up` in the project directory. (In the future, do `docker compose down` to delete the containers if you wanna start clean, or `docker compose stop` to just stop the containers)
 1. Run `npm run start`.
 
 <!-- ## How do I set this up?
