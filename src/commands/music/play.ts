@@ -12,7 +12,7 @@ export default {
     .addStringOption((option) =>
       option
         .setName('song')
-        .setDescription('Name of the song or a URL')
+        .setDescription('Name of the song or a URL (Spotify, YouTube, Deezer)')
         .setRequired(true),
     )
     .setDescription('Plays a song'),
