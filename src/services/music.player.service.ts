@@ -5,7 +5,7 @@ import {
   ChatInputCommandInteraction,
   GuildMember,
 } from 'discord.js';
-import { LoadType, Shoukaku, Track } from 'shoukaku';
+import { LoadType, Playlist, Shoukaku, Track } from 'shoukaku';
 import { songInfoEmbed } from 'utils/embeds';
 import logger from 'utils/logger';
 
@@ -50,6 +50,10 @@ export const play = async (
   let result = await node?.rest.resolve(searchPhrase);
 
   if (result?.loadType !== LoadType.SEARCH && result?.loadType !== LoadType.TRACK) {
+    if (isURL(searchPhrase)) {
+      // TODO: If a Spotify URL fails, get song name from spotify API
+      // and play it from youtube
+    }
     searchPhrase = searchPhrase.replace('ytmsearch', 'ytsearch') + ' lyrics';
     result = await node?.rest.resolve(searchPhrase);
   }
@@ -97,6 +101,10 @@ export const changePlayerState = async (
   }
 
   let player = shoukaku.players.get(interaction.guildId as string);
+  if (!player?.track) {
+    await interaction.reply("But I'm not playing anything at the moment..");
+    return;
+  }
 
   switch (command) {
     case PlayerCommand.PAUSE:
@@ -113,7 +121,7 @@ export const changePlayerState = async (
       break;
   }
 
-  await interaction.deleteReply();
+  setTimeout(async () => await interaction.deleteReply(), 1500);
 };
 
 function decorateEmbed(
