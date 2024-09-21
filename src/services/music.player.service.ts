@@ -25,15 +25,13 @@ export const play = async (
     return;
   }
 
-  let player = shoukaku.players.get(interaction.guildId as string);
-  player?.stopTrack();
+  await shoukaku.leaveVoiceChannel(interaction.guildId as string);
 
-  if (!player)
-    player = await shoukaku.joinVoiceChannel({
-      guildId: interaction.guildId as string,
-      channelId: guildMember.voice?.channel?.id as string,
-      shardId: 0,
-    });
+  const player = await shoukaku.joinVoiceChannel({
+    guildId: interaction.guildId as string,
+    channelId: guildMember.voice?.channel?.id as string,
+    shardId: 0,
+  });
 
   const node = shoukaku.options.nodeResolver(shoukaku.nodes);
 
@@ -55,8 +53,6 @@ export const play = async (
     searchPhrase = searchPhrase.replace('ytmsearch', 'ytsearch') + ' lyrics';
     result = await node?.rest.resolve(searchPhrase);
   }
-
-  // logger.debug(JSON.stringify(result, null, 2));
 
   let track: Track;
 
@@ -84,13 +80,6 @@ export const play = async (
     }),
     player.playTrack({ track: { encoded: track.encoded } }),
   ]);
-
-  // if the bot is force disconnected, delete the player
-  player.on('closed', (reason) => {
-    shoukaku.players.delete(interaction.guildId as string);
-    shoukaku.leaveVoiceChannel(interaction.guildId as string);
-    player.destroy();
-  });
 
   // TODO: Implement pause/play/stop buttons
 };
