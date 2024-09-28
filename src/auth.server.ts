@@ -1,8 +1,7 @@
 import express, { NextFunction, Request, Response } from 'express';
-import crypto from 'crypto';
 import cookieParser from 'cookie-parser';
-import { URLSearchParams } from 'url';
-import { storeRefreshToken } from './db';
+import SpotifyWebApi from 'spotify-web-api-node';
+import { storeRefreshToken } from 'db';
 import { ngrokURL, spotify, NODE_ENV, serverURL } from './config.json';
 import logger from './utils/logger';
 
@@ -14,13 +13,18 @@ const redirect_uri =
     : ngrokURL + '/tamashi/callback';
 
 const stateKey = 'spotify_auth_state';
-
-const generateRandomString = (length: number): string => {
-  return crypto.randomBytes(60).toString('hex').slice(0, length);
-};
-
 const app = express();
 app.use(cookieParser());
+
+const spotifyApi = new SpotifyWebApi({
+  clientId: client_id,
+  clientSecret: client_secret,
+  redirectUri: redirect_uri,
+});
+
+const generateRandomString = (length: number): string => {
+  return [...Array(length)].map(() => Math.random().toString(36)[2]).join('');
+};
 
 app.get('/tamashi/login', (req, res, next) => {
   const state = generateRandomString(16);
@@ -31,32 +35,26 @@ app.get('/tamashi/login', (req, res, next) => {
   res.cookie(stateKey, state);
   res.cookie('userId', userId);
 
-  const scope = [
-    'user-read-private',
-    'user-read-email',
-    'user-read-currently-playing',
-    'user-read-playback-state',
-    'user-modify-playback-state',
-    'user-read-playback-position',
-    'playlist-read-collaborative',
-    'playlist-read-private',
-  ].join(' ');
-
-  const queryParams = new URLSearchParams({
-    response_type: 'code',
-    client_id,
-    scope,
-    redirect_uri,
+  const authorizeURL = spotifyApi.createAuthorizeURL(
+    [
+      'user-read-private',
+      'user-read-email',
+      'user-read-currently-playing',
+      'user-read-playback-state',
+      'user-modify-playback-state',
+      'user-read-playback-position',
+      'playlist-read-collaborative',
+      'playlist-read-private',
+    ],
     state,
-    show_dialog: 'true',
-  }).toString();
+  );
 
-  res.redirect(`https://accounts.spotify.com/authorize?${queryParams}`);
+  res.redirect(authorizeURL);
 });
 
 app.get('/tamashi/callback', async (req, res, next) => {
-  const code = req.query.code || null;
-  const state = req.query.state || null;
+  const code = req.query.code as string;
+  const state = req.query.state as string;
   const storedState = req.cookies ? req.cookies[stateKey] : null;
   const userId = req.cookies ? req.cookies['userId'] : null;
 
@@ -70,46 +68,25 @@ app.get('/tamashi/callback', async (req, res, next) => {
   res.clearCookie('userId');
 
   try {
-    const authOptions = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Authorization: `Basic ${Buffer.from(`${client_id}:${client_secret}`).toString('base64')}`,
-      },
-      body: new URLSearchParams({
-        code: code as string,
-        redirect_uri,
-        grant_type: 'authorization_code',
-      }),
-    };
+    const data = await spotifyApi.authorizationCodeGrant(code);
 
-    const tokenResponse = await fetch(
-      'https://accounts.spotify.com/api/token',
-      authOptions,
-    );
+    const access_token = data.body['access_token'];
+    const refresh_token = data.body['refresh_token'];
 
-    if (!tokenResponse.ok) {
-      throw new Error('Token request failed');
-    }
+    spotifyApi.setAccessToken(access_token);
+    spotifyApi.setRefreshToken(refresh_token);
 
-    const { access_token, refresh_token } = await tokenResponse.json();
     logger.debug('Saving refresh token to user: ', userId);
     await storeRefreshToken(userId, refresh_token);
 
-    const userOptions = {
-      headers: { Authorization: `Bearer ${access_token}` },
-    };
+    const userData = await spotifyApi.getMe();
+    logger.debug('API request successful', userData.body);
 
-    const userResponse = await fetch('https://api.spotify.com/v1/me', userOptions);
-    if (!userResponse.ok) {
-      throw new Error('User request failed');
-    } else {
-      logger.debug('API request successful');
-    }
-
-    const userData = await userResponse.json();
+    // Optionally: Redirect to a success page or send a success response
+    res.send('Authentication successful!');
   } catch (error) {
     logger.error(error);
+    next(error);
   }
 });
 

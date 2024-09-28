@@ -5,6 +5,7 @@ import { loadCommands } from 'utils/loader';
 import RedisClient from 'utils/redis';
 import authApp from './auth.server';
 import { connectDB } from 'db';
+
 import { Connectors, Shoukaku } from 'shoukaku';
 
 const client = new Client({
