@@ -5,6 +5,7 @@ import {
   ChatInputCommandInteraction,
   GuildMember,
 } from 'discord.js';
+import { getAverageColor } from 'fast-average-color-node';
 import { LoadType, Playlist, Shoukaku, Track } from 'shoukaku';
 import { songInfoEmbed } from 'utils/embeds';
 import logger from 'utils/logger';
@@ -79,10 +80,10 @@ export const play = async (
   }
 
   await Promise.all([
-    interaction.editReply({
-      embeds: [decorateEmbed(songInfoEmbed, track)],
-    }),
     player.playTrack({ track: { encoded: track.encoded } }),
+    interaction.editReply({
+      embeds: [await decorateEmbed(songInfoEmbed, track)],
+    }),
   ]);
 
   // TODO: Implement pause/play/stop buttons
@@ -124,11 +125,20 @@ export const changePlayerState = async (
   setTimeout(async () => await interaction.deleteReply(), 1500);
 };
 
-function decorateEmbed(
+async function decorateEmbed(
   embedObject: typeof songInfoEmbed,
   track: Track,
-): typeof songInfoEmbed {
-  embedObject.color = randomHexColorCode();
+): Promise<typeof songInfoEmbed> {
+  let color;
+
+  if (track?.info?.artworkUrl) {
+    color = await getAverageColor(track.info.artworkUrl, { algorithm: 'sqrt' });
+    color = Number('0x' + color.hex.slice(1, 7));
+  } else {
+    color = randomHexColorCode();
+  }
+
+  embedObject.color = color;
   embedObject.title = track.info.title;
   embedObject.url = track.info.uri || '';
   embedObject.description = track.info.author;
