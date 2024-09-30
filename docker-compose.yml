@@ -15,7 +15,7 @@ services:
   #     LAVALINK_DOCKER_HOST: lavalink
   #   volumes:
   #     - type: bind
-  #       source: ./src/config.json
+  #       source: ./config.json
   #       target: /opt/tamashi/src/config.json
 
   redis:

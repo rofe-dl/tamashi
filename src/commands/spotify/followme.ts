@@ -16,6 +16,16 @@ export default {
     .setDescription('Follows your Spotify account and plays whatever you play'),
 
   async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+    const guildMember = interaction.member as GuildMember;
+
+    if (!guildMember?.voice?.channel?.id) {
+      await interaction.reply({
+        content: `You're not connected to any voice channel! >:(`,
+        ephemeral: true,
+      });
+      return;
+    }
+
     const userId = interaction.user.id;
     const refreshToken = await getRefreshToken(userId);
 

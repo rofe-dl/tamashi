@@ -78,20 +78,12 @@ export const playFromInteraction = async (
 ) => {
   const guildMember = interaction.member as GuildMember;
 
-  if (!guildMember?.voice?.channel?.id) {
-    await interaction.reply({
-      content: `You're not connected to any voice channel! >:(`,
-      ephemeral: true,
-    });
-    return;
-  }
-
   await interaction.deferReply();
 
   await resolveAndPlayTrack(
     shoukaku,
     interaction.guildId as string,
-    guildMember.voice.channel.id,
+    guildMember.voice?.channel?.id as string,
     searchPhrase,
     async (message) => await interaction.editReply(message),
   );

@@ -3,11 +3,11 @@
   "clientId": "your discord bot application id",
   "guildId": "needed if you wanna test it out in your own server first in development mode",
   "port": 8080,
-  "NODE_ENV": "development",
+  "NODE_ENV": "'development' OR 'production'",
   "webhookURL": "optional",
-  "ngrokURL": "",
-  "serverURL": "",
-  "avatarURL": "",
+  "ngrokURL": "needed if you are trying it locally for Spotify callback host",
+  "serverURL": "if you have a publicly available IP you are hosting it on",
+  "avatarURL": "optional",
   "spotify": {
     "clientId": "",
     "clientSecret": "",
@@ -23,6 +23,6 @@
     "port": 6379
   },
   "mongodb": {
-    "url": ""
+    "url": "url to your mongodb database, should start with mongodb+srv://"
   }
 }
