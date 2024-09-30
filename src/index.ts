@@ -5,6 +5,7 @@ import { loadCommands } from 'utils/loader';
 import RedisClient from 'utils/redis';
 import authApp from './auth.server';
 import { connectDB } from 'db';
+
 import { Connectors, Shoukaku } from 'shoukaku';
 
 const client = new Client({
@@ -25,17 +26,16 @@ const client = new Client({
     // Connect to Redis
     const redisInstance = RedisClient.getInstance();
     await redisInstance.connect();
-    await redisInstance.flush();
 
-    // Connect to DB
-    await connectDB();
-
-    // Start the server for Spotify authorization
-    await new Promise((resolve, reject) => {
-      authApp.listen(port, () => {
-        resolve(logger.info(`Auth server running on port ${port}`));
-      });
-    });
+    await Promise.all([
+      redisInstance.flush(),
+      connectDB(),
+      new Promise((resolve, reject) => {
+        authApp.listen(port, () => {
+          resolve(logger.info(`Auth server running on port ${port}`));
+        });
+      }),
+    ]);
 
     // Connect to Lavalink with Shoukaku
     const nodes = [

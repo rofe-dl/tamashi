@@ -5,7 +5,6 @@ import logger from './utils/logger';
 const connectDB = async (): Promise<void> => {
   mongoose.set('strictQuery', true);
   await mongoose.connect(mongodb.url);
-
   logger.info('MongoDB connected successfully');
 };
 
@@ -32,6 +31,7 @@ const userDataModel: Model<IUserData> = mongoose.model<IUserData>(
   userDataSchema,
 );
 
+// Store the refresh token
 const storeRefreshToken = async (
   discordUserId: string,
   refreshToken: string,
@@ -42,11 +42,17 @@ const storeRefreshToken = async (
       { refreshToken },
       { new: true, upsert: true },
     );
-
     logger.debug('Refresh token updated: ' + result);
   } catch (error) {
     logger.error(error);
   }
 };
 
-export { storeRefreshToken, connectDB };
+// Function to retrieve the refresh token for a specific user
+const getRefreshToken = async (discordUserId: string): Promise<string | undefined> => {
+  const userData = await userDataModel.findOne({ discordUserId });
+
+  return userData?.refreshToken;
+};
+
+export { storeRefreshToken, getRefreshToken, connectDB };

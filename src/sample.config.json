@@ -6,7 +6,7 @@
   "NODE_ENV": "development",
   "webhookURL": "optional",
   "ngrokURL": "",
-  "serverURL": "http://188.166.223.166:8080",
+  "serverURL": "",
   "avatarURL": "",
   "spotify": {
     "clientId": "",
