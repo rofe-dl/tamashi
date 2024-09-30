@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   # tamashi:
   #   build: ./
@@ -20,7 +19,7 @@ services:
   #       target: /opt/tamashi/src/config.json
 
   redis:
-    image: redis
+    image: redis:7.4.0
     container_name: tamashi_redis
     # comment the ports when the bot will be included in the docker
     ports:
