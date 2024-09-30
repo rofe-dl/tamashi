@@ -3,7 +3,7 @@ import {
   GuildMember,
   SlashCommandBuilder,
 } from 'discord.js';
-import { getRefreshToken } from 'db';
+import { deleteRefreshToken, getRefreshToken } from 'db';
 import { playFromInteraction } from 'services/music.player.service';
 import RedisClient from 'utils/redis';
 import { getCurrentPlaying } from 'services/sync.spotify.service';
@@ -30,10 +30,33 @@ export default {
       return;
     }
 
-    const { trackURL, accessToken, isPlaying } = await getCurrentPlaying(refreshToken);
+    let currentlyPlaying;
+
+    try {
+      currentlyPlaying = await getCurrentPlaying(refreshToken);
+    } catch (err: any) {
+      if (err.statusCode == 400) {
+        const contentString = `It appears you may have revoked my access to your Spotify account.\nVisit ${NODE_ENV === 'production' ? serverURL : ngrokURL}/tamashi/login?userId=${userId}.`;
+
+        await Promise.all([
+          interaction.reply({
+            content: contentString,
+            ephemeral: true,
+          }),
+          deleteRefreshToken(userId),
+        ]);
+
+        return;
+      } else throw err;
+    }
+
+    if (!currentlyPlaying)
+      throw new Error('Currently playing song could not be retrieved');
+
+    const { trackURL, accessToken, isPlaying } = currentlyPlaying;
 
     if (!trackURL) {
-      await interaction.reply('You are not currently playing any song on Spotify.');
+      await interaction.reply("You're not really playing anything on Spotify");
       return;
     }
 

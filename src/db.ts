@@ -31,7 +31,6 @@ const userDataModel: Model<IUserData> = mongoose.model<IUserData>(
   userDataSchema,
 );
 
-// Store the refresh token
 const storeRefreshToken = async (
   discordUserId: string,
   refreshToken: string,
@@ -48,11 +47,14 @@ const storeRefreshToken = async (
   }
 };
 
-// Function to retrieve the refresh token for a specific user
 const getRefreshToken = async (discordUserId: string): Promise<string | undefined> => {
   const userData = await userDataModel.findOne({ discordUserId });
 
   return userData?.refreshToken;
 };
 
-export { storeRefreshToken, getRefreshToken, connectDB };
+const deleteRefreshToken = async (discordUserId: string): Promise<void> => {
+  await userDataModel.findOneAndDelete({ discordUserId });
+};
+
+export { storeRefreshToken, getRefreshToken, connectDB, deleteRefreshToken };
