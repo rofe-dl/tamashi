@@ -1,9 +1,8 @@
+import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
 import {
-  ChatInputCommandInteraction,
-  GuildMember,
-  SlashCommandBuilder,
-} from 'discord.js';
-import { changePlayerState, PlayerCommand } from 'services/music.player.service';
+  changePlayerStateFromInteraction,
+  PlayerCommand,
+} from 'services/music.player.service';
 
 export default {
   data: new SlashCommandBuilder()
@@ -13,6 +12,6 @@ export default {
   async execute(interaction: ChatInputCommandInteraction): Promise<void> {
     const shoukaku = interaction.client.shoukaku;
 
-    await changePlayerState(PlayerCommand.PAUSE, interaction, shoukaku);
+    await changePlayerStateFromInteraction(PlayerCommand.PAUSE, interaction, shoukaku);
   },
 };
