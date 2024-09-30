@@ -5,8 +5,6 @@ import { storeRefreshToken } from 'db';
 import { ngrokURL, spotify, NODE_ENV, serverURL } from './config.json';
 import logger from './utils/logger';
 
-const client_id = spotify.clientId;
-const client_secret = spotify.clientSecret;
 const redirect_uri =
   NODE_ENV === 'production'
     ? serverURL + '/tamashi/callback'
@@ -17,8 +15,8 @@ const app = express();
 app.use(cookieParser());
 
 const spotifyApi = new SpotifyWebApi({
-  clientId: client_id,
-  clientSecret: client_secret,
+  clientId: spotify.clientId,
+  clientSecret: spotify.clientSecret,
   redirectUri: redirect_uri,
 });
 
@@ -35,21 +33,26 @@ app.get('/tamashi/login', (req, res, next) => {
   res.cookie(stateKey, state);
   res.cookie('userId', userId);
 
-  const authorizeURL = spotifyApi.createAuthorizeURL(
-    [
-      'user-read-private',
-      'user-read-email',
-      'user-read-currently-playing',
-      'user-read-playback-state',
-      'user-modify-playback-state',
-      'user-read-playback-position',
-      'playlist-read-collaborative',
-      'playlist-read-private',
-    ],
-    state,
-  );
+  try {
+    const authorizeURL = spotifyApi.createAuthorizeURL(
+      [
+        'user-read-private',
+        'user-read-email',
+        'user-read-currently-playing',
+        'user-read-playback-state',
+        'user-modify-playback-state',
+        'user-read-playback-position',
+        'playlist-read-collaborative',
+        'playlist-read-private',
+      ],
+      state,
+      true,
+    );
 
-  res.redirect(authorizeURL);
+    res.redirect(authorizeURL);
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.get('/tamashi/callback', async (req, res, next) => {
@@ -70,22 +73,21 @@ app.get('/tamashi/callback', async (req, res, next) => {
   try {
     const data = await spotifyApi.authorizationCodeGrant(code);
 
-    const access_token = data.body['access_token'];
+    // const access_token = data.body['access_token'];
     const refresh_token = data.body['refresh_token'];
 
-    spotifyApi.setAccessToken(access_token);
-    spotifyApi.setRefreshToken(refresh_token);
+    // spotifyApi.setAccessToken(access_token);
+    // spotifyApi.setRefreshToken(refresh_token);
 
     logger.debug('Saving refresh token to user: ', userId);
     await storeRefreshToken(userId, refresh_token);
 
-    const userData = await spotifyApi.getMe();
-    logger.debug('API request successful', userData.body);
+    // const userData = await spotifyApi.getMe();
+    // logger.debug('API request successful', userData.body);
 
     // Optionally: Redirect to a success page or send a success response
-    res.send('Authentication successful!');
+    res.send('Authorization successful! Close this tab and try the command again.');
   } catch (error) {
-    logger.error(error);
     next(error);
   }
 });
