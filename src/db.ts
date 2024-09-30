@@ -49,19 +49,10 @@ const storeRefreshToken = async (
 };
 
 // Function to retrieve the refresh token for a specific user
-const getRefreshToken = async (discordUserId: string): Promise<string | null> => {
-  try {
-    const userData = await userDataModel.findOne({ discordUserId });
-    if (userData) {
-      return userData.refreshToken;
-    } else {
-      logger.error(`No refresh token found for user: ${discordUserId}`);
-      return null;
-    }
-  } catch (error) {
-    logger.error('Error retrieving refresh token:', error);
-    return null;
-  }
+const getRefreshToken = async (discordUserId: string): Promise<string | undefined> => {
+  const userData = await userDataModel.findOne({ discordUserId });
+
+  return userData?.refreshToken;
 };
 
 export { storeRefreshToken, getRefreshToken, connectDB };
