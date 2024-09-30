@@ -55,39 +55,29 @@ class RedisClient {
   }
 
   async set(key: string | null, value: string | null): Promise<void> {
-    try {
-      if (!key || !value) throw new Error('Cannot set key/value as null');
+    if (!key || !value) throw new Error('Cannot set key/value as null');
 
-      await this.client.set(key, value);
-      logger.debug(`Set key ${key} to ${value} successfully.`);
-    } catch (error) {
-      logger.error(`Error setting key ${key}:`, error);
-    }
+    await this.client.set(key, value);
+  }
+
+  async lock(key: string) {
+    // NX only sets the key/value if it doesnt exist, then returns truthy
+    // EX sets an expiry time in seconds in case the entry never gets removed
+    return await this.client.set(key, 'locked', { NX: true, EX: 20 });
   }
 
   async get(key: string | null): Promise<string | null> {
-    try {
-      if (key == null) return null;
+    if (key == null) return null;
 
-      const value = await this.client.get(key);
-      logger.debug(`Retrieved key ${key} successfully.`);
+    const value = await this.client.get(key);
 
-      return value;
-    } catch (error) {
-      logger.error(`Error getting key ${key}:`, error);
-      return null;
-    }
+    return value;
   }
 
   async delete(key: string | null): Promise<void> {
-    try {
-      if (key == null) throw new Error('Cannot remove key as null');
+    if (key == null) throw new Error('Cannot remove key as null');
 
-      await this.client.del(key);
-      logger.debug(`Removed key ${key} successfully.`);
-    } catch (error) {
-      logger.error(`Error removing key ${key}:`, error);
-    }
+    await this.client.del(key);
   }
 }
 

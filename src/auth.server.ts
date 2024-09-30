@@ -73,19 +73,11 @@ app.get('/tamashi/callback', async (req, res, next) => {
   try {
     const data = await spotifyApi.authorizationCodeGrant(code);
 
-    // const access_token = data.body['access_token'];
     const refresh_token = data.body['refresh_token'];
-
-    // spotifyApi.setAccessToken(access_token);
-    // spotifyApi.setRefreshToken(refresh_token);
 
     logger.debug('Saving refresh token to user: ', userId);
     await storeRefreshToken(userId, refresh_token);
 
-    // const userData = await spotifyApi.getMe();
-    // logger.debug('API request successful', userData.body);
-
-    // Optionally: Redirect to a success page or send a success response
     res.send('Authorization successful! Close this tab and try the command again.');
   } catch (error) {
     next(error);
