@@ -41,7 +41,7 @@ And no, I don't have plans to host and make this a public bot for everyone. This
 
 ### Things to look out for
 
-1. In the Discord developer portal, when generating the invte link for the bot, set the scopes to `bot`, `voice` and `application.commands`. Then give it admin access from the bot permissions.
+1. In the Discord developer portal, when generating the invite link for the bot, set the scopes to `bot`, `voice` and `application.commands`. Then give it admin access from the bot permissions.
 1. To test the bot locally, you can setup [ngrok](https://ngrok.com/use-cases/webhook-testing) to test the callback URL from Spotify for a public URL. You will also have to set this in the Spotify application settings from the dashboard (in the dashboard make sure it ends with `/tamashi/callback`). The public URL ngrok gives you will also have to be put in `config.json` file.
 1. Without a quota extension from Spotify, you can have a maximum of 25 users (excluding yourself) use the `/followme` command. You'll have to add their emails in the `Users And Access` section of the dashboard.
 
