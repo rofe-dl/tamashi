@@ -1,12 +1,12 @@
 import { Client, Events, GatewayIntentBits, Collection } from 'discord.js';
-import { token, port, lavalink } from './config.json';
+import { token, port, lavalink, spotify } from './config.json';
 import logger from 'utils/logger';
 import { loadCommands } from 'utils/loader';
 import RedisClient from 'utils/redis';
 import authApp from './auth.server';
 import { connectDB } from 'db';
-
 import { Connectors, Shoukaku } from 'shoukaku';
+import syncSpotifyService from 'services/sync.spotify.service';
 
 const client = new Client({
   intents: [
@@ -23,7 +23,6 @@ const client = new Client({
  */
 (async () => {
   try {
-    // Connect to Redis
     const redisInstance = RedisClient.getInstance();
     await redisInstance.connect();
 
@@ -41,6 +40,7 @@ const client = new Client({
     const nodes = [
       {
         name: 'Lavalink Server',
+        // if running inside Docker, it'll use the host defined in docker compose file
         url: `${process.env.LAVALINK_DOCKER_HOST || lavalink.host}:${lavalink.port}`,
         auth: lavalink.password,
       },
@@ -61,47 +61,55 @@ loadCommands(client);
 
 // sets the callback for when a slash command event is triggered
 client.on(Events.InteractionCreate, async (interaction) => {
-  if (interaction.isChatInputCommand()) {
-    const command = interaction.client.commands.get(interaction.commandName);
+  if (!interaction.isChatInputCommand()) return;
 
-    if (!command) {
-      logger.error(
-        new Error(`No command matching ${interaction.commandName} was found.`),
-      );
+  const command = interaction.client.commands.get(interaction.commandName);
 
-      return;
+  if (!command) {
+    logger.error(new Error(`No command matching ${interaction.commandName} was found.`));
+
+    return;
+  }
+
+  // In case any of the commands ever throw an uncaught error
+  try {
+    logger.debug(`Executing ${interaction.commandName}`);
+    await command.execute(interaction);
+  } catch (error) {
+    logger.error(error);
+
+    // if an interaction was already replied to but an error occurred afterwards, we follow up to that interaction
+    // otherwise we just reply to it
+    if (interaction.deferred) {
+      await interaction.editReply({
+        content: `Oh god something has gone horribly wrong!`,
+      });
+    } else if (interaction.replied) {
+      await interaction.followUp({
+        content: 'Oh god something has gone horribly wrong!',
+      });
+    } else {
+      await interaction.reply({
+        content: 'Oh god something has gone horribly wrong!',
+        ephemeral: true,
+      });
     }
-
-    // In case any of the commands ever throw an uncaught error
-    try {
-      logger.debug(`Executing ${interaction.commandName}`);
-      await command.execute(interaction);
-    } catch (error) {
-      logger.error(error);
-
-      // if an interaction was already replied to but an error occurred afterwards, we follow up to that interaction
-      // otherwise we just reply to it
-      if (interaction.deferred) {
-        await interaction.editReply({
-          content: 'I might have made an oopsies...',
-        });
-      } else if (interaction.replied) {
-        await interaction.followUp({
-          content: 'I might have made an oopsies...',
-        });
-      } else {
-        await interaction.reply({
-          content: 'I might have made an oopsies...',
-          ephemeral: true,
-        });
-      }
-    }
-  } else if (interaction.isButton()) {
-    // TODO: Implement buttons later
   }
 });
 
 // when the client is ready, this callback is run only once
 client.once(Events.ClientReady, (readyClient) => {
   logger.info(`Ready! Logged in as ${readyClient.user.tag}`);
+
+  /**
+   * Every few seconds, it calls this function to update
+   * what everyone is listening to on their Spotify. Everyone meaning
+   * the ones who used the /followme command.
+   */
+  setInterval(
+    () => {
+      syncSpotifyService(client);
+    },
+    Number(spotify.requestIntervalMs) || 2000,
+  );
 });

@@ -1,9 +1,5 @@
-import {
-  ChatInputCommandInteraction,
-  GuildMember,
-  SlashCommandBuilder,
-} from 'discord.js';
-import { play } from 'services/music.player.service';
+import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
+import { playFromInteraction } from 'services/music.player.service';
 import logger from 'utils/logger';
 
 export default {
@@ -19,8 +15,8 @@ export default {
 
   async execute(interaction: ChatInputCommandInteraction): Promise<void> {
     const shoukaku = interaction.client.shoukaku;
-    let searchPhrase = interaction.options.getString('song') as string;
+    const searchPhrase = interaction.options.getString('song') as string;
 
-    await play(interaction, searchPhrase, shoukaku);
+    await playFromInteraction(interaction, searchPhrase, shoukaku);
   },
 };
