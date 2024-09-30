@@ -11,7 +11,7 @@
   "spotify": {
     "clientId": "",
     "clientSecret": "",
-    "requestIntervalMs": 2000
+    "requestIntervalMs": 1500
   },
   "lavalink": {
     "password": "any value, must match the one in application.yml",
