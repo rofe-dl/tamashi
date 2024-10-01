@@ -48,8 +48,8 @@ And no, I don't have plans to host and make this a public bot for everyone. This
 1. Make a free MongoDB database using Atlas.
 1. Download the `docker-compose.prod.yml` file.
 1. In the same directory, make a file called `application.yml` and copy the contents from `sample.lavalink.application.yml` into it. Fill up the fields marked `#INPUT` with your own values.
-1. In the same directory, make a file called `config.json` in ./src folder and fill it with your info just like in `sample.config.json`.
-1. Run `docker compose -f docker-compose.prod.yml up` in the directory. (In the future, do `docker compose down` to delete the containers if you wanna start clean, or `docker compose stop` to just stop the containers)
+1. In the same directory, make a file called `config.json` in ./src folder and fill it with your info just like in `sample.config.json`
+1. Run `docker compose -f docker-compose.prod.yml up` in the directory. (In the future, do `docker compose -f docker-compose.prod.yml down` to delete the containers if you wanna rebuild them, or `docker compose -f docker-compose.prod.yml stop` to just stop the containers)
 1. To make the slash commands work, enter the shell of the container by running `docker exec -ti <container name of tamashi-bot> /bin/bash`. Then, run `npm run deploycommands`. Exit the shell using `exit` command. You'll only have to run this once. However, if you make any changes to the command names or add/delete new ones, deploy the commands again.
 
 ### Things to look out for
