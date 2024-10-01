@@ -1,4 +1,23 @@
 services:
+  tamashi:
+    build: ./
+    container_name: tamashi_bot
+    image: rofedl/tamashi:2.0.0
+    ports:
+      - 8080:8080
+    depends_on:
+      - redis
+      - lavalink
+    networks:
+      - default
+    environment:
+      REDIS_DOCKER_HOST: redis
+      LAVALINK_DOCKER_HOST: lavalink
+    volumes:
+      - type: bind
+        source: ./config.json
+        target: /opt/tamashi/src/config.json
+
   redis:
     image: redis:7.4.0
     container_name: tamashi_redis

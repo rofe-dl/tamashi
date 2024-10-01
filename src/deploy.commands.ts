@@ -44,31 +44,24 @@ const rest = new REST().setToken(token);
 // and deploy your commands!
 (async () => {
   try {
-    console.log(commands)
-    logger.info(
-      `Started refreshing ${commands.length} application (/) commands.`,
-    );
+    console.log(commands);
+    logger.info(`Started refreshing ${commands.length} application (/) commands.`);
 
     let data: any;
 
-    if (NODE_ENV === 'production') {
+    if (NODE_ENV === 'production' || guildId?.length === 0) {
       data = await rest.put(Routes.applicationCommands(clientId), {
         body: commands,
       });
     } else {
       if (!guildId) throw new Error('Guild ID not found in config file');
 
-      data = await rest.put(
-        Routes.applicationGuildCommands(clientId, guildId),
-        {
-          body: commands,
-        },
-      );
+      data = await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+        body: commands,
+      });
     }
 
-    logger.info(
-      `Successfully reloaded ${data.length} application (/) commands.`,
-    );
+    logger.info(`Successfully reloaded ${data.length} application (/) commands.`);
   } catch (error) {
     // And of course, make sure you catch and log any errors!
     logger.error(error);

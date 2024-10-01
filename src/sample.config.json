@@ -3,7 +3,7 @@
   "clientId": "your discord bot application id",
   "guildId": "needed if you wanna test it out in your own server first in development mode",
   "port": 8080,
-  "NODE_ENV": "'development' OR 'production'",
+  "NODE_ENV": "'development' (for tinkering with it locally) OR 'production' (for using the whole thing in a docker image)",
   "webhookURL": "optional",
   "ngrokURL": "needed if you are trying it locally for Spotify callback host",
   "serverURL": "if you have a publicly available IP you are hosting it on",

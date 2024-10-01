@@ -4,7 +4,7 @@ import logger from 'utils/logger';
 
 const rest = new REST().setToken(token);
 
-if (NODE_ENV === 'production') {
+if (NODE_ENV === 'production' || guildId?.length === 0) {
   rest
     .put(Routes.applicationCommands(clientId), { body: [] })
     .then(() => logger.info('Successfully deleted all application commands.'))

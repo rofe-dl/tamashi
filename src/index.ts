@@ -1,5 +1,5 @@
 import { Client, Events, GatewayIntentBits, Collection } from 'discord.js';
-import { token, port, lavalink, spotify } from './config.json';
+import { token, port, lavalink, spotify, NODE_ENV } from './config.json';
 import logger from 'utils/logger';
 import { loadCommands } from 'utils/loader';
 import RedisClient from 'utils/redis';
@@ -23,6 +23,13 @@ const client = new Client({
  */
 (async () => {
   try {
+    if (NODE_ENV === 'production') {
+      logger.info('Waiting 30 seconds for required services to start...');
+      await new Promise((resolve, reject) => {
+        setTimeout(resolve, 30000);
+      });
+    }
+
     const redisInstance = RedisClient.getInstance();
     await redisInstance.connect();
 
