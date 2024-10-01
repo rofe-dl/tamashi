@@ -33,6 +33,10 @@ const resolveAndPlayTrack = async (
     shardId: 0,
   });
 
+  player.on('exception', (reason) => {
+    logger.error(reason.exception);
+  });
+
   const node = shoukaku.options.nodeResolver(shoukaku.nodes);
 
   // Check if search phrase is a URL
@@ -43,8 +47,10 @@ const resolveAndPlayTrack = async (
   // Retry search with YouTube lyrics if initial search fails
   if (result?.loadType !== LoadType.SEARCH && result?.loadType !== LoadType.TRACK) {
     if (isURL(searchPhrase)) {
-      // TODO: Handle Spotify URL failure by using Spotify API to get the song name and playing from YouTube
+      await sendReply(`Hmm unfortunately, I can't play that :(`);
+      return;
     }
+
     searchPhrase = searchPhrase.replace('ytmsearch', 'ytsearch') + ' lyrics';
     result = await node?.rest.resolve(searchPhrase);
   }
@@ -59,7 +65,7 @@ const resolveAndPlayTrack = async (
     result?.loadType === LoadType.PLAYLIST ||
     result?.loadType === LoadType.EMPTY
   ) {
-    await sendReply(`Didn't really find the song you're looking for :(`);
+    await sendReply(`Hmm unfortunately, I can't play that :(`);
     return;
   } else {
     throw new Error('An error occurred while trying to play that song');
