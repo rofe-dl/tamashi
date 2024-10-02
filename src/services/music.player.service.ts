@@ -7,38 +7,12 @@ import {
   TextChannel,
 } from 'discord.js';
 import { getAverageColor } from 'fast-average-color-node';
-import { decode } from 'punycode';
 import { LoadType, Player, Shoukaku, Track } from 'shoukaku';
 import { songInfoEmbed } from 'utils/embeds';
+import { CustomPlayer } from 'services/custom.player'
 import logger from 'utils/logger';
 
-
-class CustomPlayer extends Player {
-  public trackInfo: Track
-  constructor(...args: ConstructorParameters<typeof Player>) {
-    super(...args);
-    this.trackInfo = {
-    encoded: "",
-    info: {
-        identifier: "",
-        isseekable: false,
-        author: "",
-        length: 0,
-        isstream: false, 
-        position: 0,
-        title: "",
-        sourcename: "", 
-    },
-    plugininfo: {},
-    }
-  }
-
-  public setTrackInfo(data: Track): void {
-    this.trackInfo = data;
-  }
-
-}
-/**
+/*
  * Helper function to play music, either from the
  * manual /play command or from following someone's
  * Spotify.
@@ -90,6 +64,10 @@ const resolveAndPlayTrack = async (
     return;
   } else {
     throw new Error('An error occurred while trying to play that song');
+  }
+
+  if (player instanceof CustomPlayer) {
+      player.setTrackInfo(track)
   }
 
   await Promise.all([
@@ -202,7 +180,6 @@ export const getCurrentlyPlaying = async (
   interaction: ChatInputCommandInteraction,
   shoukaku: Shoukaku,
 ) => {
-  const guildMember = interaction.member as GuildMember;
 
   await interaction.deferReply();
 
@@ -211,11 +188,24 @@ export const getCurrentlyPlaying = async (
     await interaction.reply("But I'm not playing anything at the moment..");
     return;
   }
-
-  let track = player?.track;
-  const decodedBuffer = Buffer.from(track, 'base64');
-  track = decodedBuffer.toString('utf-8');
-  await interaction.editReply(track);
+  
+  let track: Track | undefined;
+  // If player doesn't have trackinfo, query it.
+  if (player instanceof CustomPlayer) {
+    logger.info("Getting trackinfo from player")
+    track = player.getTrackInfo() ?? undefined;
+  }
+  else {
+      logger.info("Querying trackinfo from Lvlink")
+      track = await player.node.rest.decode(player.track); 
+  }
+  
+  if (track) {
+    await interaction.editReply({ embeds: [await decorateEmbed(songInfoEmbed, track)] });
+  }
+  else {
+      await interaction.editReply("I return from my quest, but I must bear the heavy burden of failure.");
+  }
 
 };
 
@@ -244,7 +234,7 @@ async function decorateEmbed(
   return embedObject;
 }
 
-  
+
 
 
 function isURL(s: string): boolean {
