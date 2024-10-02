@@ -7,10 +7,37 @@ import {
   TextChannel,
 } from 'discord.js';
 import { getAverageColor } from 'fast-average-color-node';
+import { decode } from 'punycode';
 import { LoadType, Player, Shoukaku, Track } from 'shoukaku';
 import { songInfoEmbed } from 'utils/embeds';
 import logger from 'utils/logger';
 
+
+class CustomPlayer extends Player {
+  public trackInfo: Track
+  constructor(...args: ConstructorParameters<typeof Player>) {
+    super(...args);
+    this.trackInfo = {
+    encoded: "",
+    info: {
+        identifier: "",
+        isseekable: false,
+        author: "",
+        length: 0,
+        isstream: false, 
+        position: 0,
+        title: "",
+        sourcename: "", 
+    },
+    plugininfo: {},
+    }
+  }
+
+  public setTrackInfo(data: Track): void {
+    this.trackInfo = data;
+  }
+
+}
 /**
  * Helper function to play music, either from the
  * manual /play command or from following someone's
@@ -171,6 +198,30 @@ export const changePlayerState = async (
   );
 };
 
+export const getCurrentlyPlaying = async (
+  interaction: ChatInputCommandInteraction,
+  shoukaku: Shoukaku,
+) => {
+  const guildMember = interaction.member as GuildMember;
+
+  await interaction.deferReply();
+
+  const player = shoukaku.players.get(interaction.guildId as string);
+  if (!player?.track) {
+    await interaction.reply("But I'm not playing anything at the moment..");
+    return;
+  }
+
+  let track = player?.track;
+  const decodedBuffer = Buffer.from(track, 'base64');
+  track = decodedBuffer.toString('utf-8');
+  await interaction.editReply(track);
+
+};
+
+
+
+
 async function decorateEmbed(
   embedObject: typeof songInfoEmbed,
   track: Track,
@@ -192,6 +243,9 @@ async function decorateEmbed(
 
   return embedObject;
 }
+
+  
+
 
 function isURL(s: string): boolean {
   const HTTP_URL_REGEX =
