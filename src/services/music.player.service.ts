@@ -30,21 +30,24 @@ const resolveAndPlayTrack = async (
 ): Promise<void> => {
   const connection = shoukaku.connections.get(guildId.toString());
 
-  // Get existing player if still connected, otherwise join channel
   let player: Player | undefined;
 
-  if (!connection) {
-    /**
-     * Sometimes the connection doesnt exist after a forced disconnect,
-     * but shoukaku still thinks its connected. To workaround the bug,
-     * we make it leave the channel.
-     */
+  player = shoukaku.players.get(guildId) as Player;
+  player?.stopTrack();
+
+  /**
+   * Remove previous event listeners first so 'closed' event is
+   * not triggered if user retries the command from another voice channel
+   * and wants it to join there instead.
+   */
+  player?.clean();
+  if (connection && connection.channelId !== voiceChannelId) {
     await shoukaku.leaveVoiceChannel(guildId);
-  } else {
-    player = shoukaku.players.get(guildId) as Player;
-    player?.stopTrack();
   }
 
+  /**
+   * Make the bot join voice channel if it already didn't
+   */
   if (!player) {
     player = await shoukaku.joinVoiceChannel({
       guildId: guildId,
@@ -52,9 +55,6 @@ const resolveAndPlayTrack = async (
       shardId: 0,
     });
   }
-
-  // Remove previous event listeners and set new ones
-  player.clean();
 
   player.on('exception', (reason) => {
     logger.error(reason.exception);
