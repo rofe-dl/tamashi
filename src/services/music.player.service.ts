@@ -40,7 +40,6 @@ const resolveAndPlayTrack = async (
    * and wants it to join there instead.
    */
   player?.clean();
-  // not doing connection?.channelId as I only want it to leave the channel if its connected
   if (connection && connection.channelId !== voiceChannelId) {
     await shoukaku.leaveVoiceChannel(guildId);
   }
