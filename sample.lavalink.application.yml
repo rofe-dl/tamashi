@@ -4,6 +4,16 @@ server: # REST and WS server
 plugins:
   youtube:
     enabled: true # Whether this source can be used.
+    oauth:
+      # set this to true and follow steps below if you really wanna be able to play from youtube without their bot detection
+      # to just support spotify urls, you can leave this false
+      enabled: true
+
+      # 1. leave refreshToken commented on the first run
+      # 2. lavalink console logs will tell you to go to a authorization url
+      # 3. use a burner google account for safety, then authorize the bot to use that account
+      # 4. you will get the refresh token in the console logs, just paste it below and uncomment it
+      # refreshToken: #INPUT
     allowSearch: true # Whether "ytsearch:" and "ytmsearch:" can be used.
     allowDirectVideoIds: true # Whether just video IDs can match. If false, only complete URLs will be loaded.
     allowDirectPlaylistIds: true # Whether just playlist IDs can match. If false, only complete URLs will be loaded.
@@ -41,9 +51,9 @@ plugins:
 
 lavalink:
   plugins:
-    - dependency: 'com.github.topi314.lavasrc:lavasrc-plugin:4.2.0'
+    - dependency: 'com.github.topi314.lavasrc:lavasrc-plugin:4.3.0'
       snapshot: false
-    - dependency: 'dev.lavalink.youtube:youtube-plugin:1.8.0'
+    - dependency: 'dev.lavalink.youtube:youtube-plugin:1.8.3'
       snapshot: false
   server:
     password: '' #INPUT

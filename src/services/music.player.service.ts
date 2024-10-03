@@ -9,7 +9,9 @@ import {
 import { getAverageColor } from 'fast-average-color-node';
 import { LoadType, Player, Shoukaku, Track } from 'shoukaku';
 import { songInfoEmbed } from 'utils/embeds';
+import { CustomPlayer } from 'services/custom.player';
 import logger from 'utils/logger';
+import RedisClient from 'utils/redis';
 
 /**
  * Helper function to play music, either from the
@@ -20,17 +22,64 @@ const resolveAndPlayTrack = async (
   shoukaku: Shoukaku,
   guildId: string,
   voiceChannelId: string,
+  textChannel: TextChannel,
   searchPhrase: string,
   sendReply: (
     message: string | { embeds: (typeof songInfoEmbed)[] },
   ) => Promise<void | Message<boolean>>,
 ): Promise<void> => {
-  await shoukaku.leaveVoiceChannel(guildId);
+  const connection = shoukaku.connections.get(guildId.toString());
 
-  const player = await shoukaku.joinVoiceChannel({
-    guildId: guildId,
-    channelId: voiceChannelId,
-    shardId: 0,
+  let player: Player | undefined;
+
+  player = shoukaku.players.get(guildId) as Player;
+  player?.stopTrack();
+
+  /**
+   * Remove previous event listeners first so 'closed' event is
+   * not triggered if user retries the command from another voice channel
+   * and wants it to join there instead.
+   */
+  player?.clean();
+
+  /**
+   * Make the bot join voice channel if it already didn't
+   */
+  if (!player || connection?.channelId !== voiceChannelId) {
+    await shoukaku.leaveVoiceChannel(guildId);
+
+    player = await shoukaku.joinVoiceChannel({
+      guildId: guildId,
+      channelId: voiceChannelId,
+      shardId: 0,
+    });
+  }
+
+  player.on('exception', (reason) => {
+    logger.error(reason.exception);
+  });
+
+  player.on('closed', async () => {
+    /**
+     * If forced to disconnect/move, then unfollow the user if following them
+     * and leave the channel so Shoukaku closes the connection.
+     *
+     * Choosing not to support moving the bot around voice channels
+     * as there's no proper way to differentiate from disconnections.
+     * We'd have to update the redis entry for the updated voice channel ID
+     * if the bot is following someone as well; not worth the hassle.
+     */
+    try {
+      await Promise.all([
+        RedisClient.getInstance().delete(guildId),
+        player.destroy(),
+        textChannel.send("I didn't like that. Bye."),
+      ]);
+
+      await shoukaku.leaveVoiceChannel(guildId);
+    } catch (err) {
+      logger.error(err);
+    }
   });
 
   const node = shoukaku.options.nodeResolver(shoukaku.nodes);
@@ -43,8 +92,10 @@ const resolveAndPlayTrack = async (
   // Retry search with YouTube lyrics if initial search fails
   if (result?.loadType !== LoadType.SEARCH && result?.loadType !== LoadType.TRACK) {
     if (isURL(searchPhrase)) {
-      // TODO: Handle Spotify URL failure by using Spotify API to get the song name and playing from YouTube
+      await sendReply(`Hmm unfortunately, I can't play that :(`);
+      return;
     }
+
     searchPhrase = searchPhrase.replace('ytmsearch', 'ytsearch') + ' lyrics';
     result = await node?.rest.resolve(searchPhrase);
   }
@@ -59,10 +110,14 @@ const resolveAndPlayTrack = async (
     result?.loadType === LoadType.PLAYLIST ||
     result?.loadType === LoadType.EMPTY
   ) {
-    await sendReply(`Didn't really find the song you're looking for :(`);
+    await sendReply(`Hmm unfortunately, I can't play that :(`);
     return;
   } else {
     throw new Error('An error occurred while trying to play that song');
+  }
+
+  if (player instanceof CustomPlayer) {
+    player.setTrackInfo(track);
   }
 
   await Promise.all([
@@ -76,6 +131,9 @@ export const playFromInteraction = async (
   searchPhrase: string,
   shoukaku: Shoukaku,
 ) => {
+  const textChannel = interaction.client.channels.cache.get(
+    interaction.channelId,
+  ) as TextChannel;
   const guildMember = interaction.member as GuildMember;
 
   await interaction.deferReply();
@@ -84,6 +142,7 @@ export const playFromInteraction = async (
     shoukaku,
     interaction.guildId as string,
     guildMember.voice?.channel?.id as string,
+    textChannel,
     searchPhrase,
     async (message) => await interaction.editReply(message),
   );
@@ -103,6 +162,7 @@ export const play = async (
     shoukaku,
     guildId,
     voiceChannelId,
+    textChannel,
     searchPhrase,
     async (message) => await textChannel.send(message),
   );
@@ -169,6 +229,37 @@ export const changePlayerState = async (
     command,
     async (message) => await textChannel.send(message),
   );
+};
+
+export const getCurrentlyPlaying = async (
+  interaction: ChatInputCommandInteraction,
+  shoukaku: Shoukaku,
+) => {
+  await interaction.deferReply();
+
+  const player = shoukaku.players.get(interaction.guildId as string);
+  if (!player?.track) {
+    await interaction.editReply("But I'm not playing anything at the moment..");
+    return;
+  }
+
+  let track: Track | undefined;
+
+  if (player instanceof CustomPlayer) {
+    logger.debug('Getting track info from player');
+    track = player.getTrackInfo() ?? undefined;
+  } else {
+    logger.debug('Querying track info from Lavalink');
+    track = await player.node.rest.decode(player.track);
+  }
+
+  if (track) {
+    await interaction.editReply({ embeds: [await decorateEmbed(songInfoEmbed, track)] });
+  } else {
+    await interaction.editReply(
+      'I return from my quest, but I must bear the heavy burden of failure.',
+    );
+  }
 };
 
 async function decorateEmbed(
