@@ -69,11 +69,17 @@ const resolveAndPlayTrack = async (
      * We'd have to update the redis entry for the updated voice channel ID
      * if the bot is following someone as well; not worth the hassle.
      */
-    RedisClient.getInstance().delete(guildId);
-    player.destroy();
-    shoukaku.leaveVoiceChannel(guildId);
+    try {
+      await Promise.all([
+        RedisClient.getInstance().delete(guildId),
+        player.destroy(),
+        textChannel.send("I didn't like that. Bye."),
+      ]);
 
-    await textChannel.send("I didn't like that. Bye.");
+      await shoukaku.leaveVoiceChannel(guildId);
+    } catch (err) {
+      logger.error(err);
+    }
   });
 
   const node = shoukaku.options.nodeResolver(shoukaku.nodes);
