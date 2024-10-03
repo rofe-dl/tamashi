@@ -10,15 +10,16 @@ And no, I don't have plans to host and make this a public bot for everyone. This
 
 ## Key Commands
 
-| Command       | Description                                                        |
-| ------------- | ------------------------------------------------------------------ |
-| `/followme`   | Makes the bot track what you're currently playing on Spotify!      |
-| `/unfollowme` | Makes the bot stop tracking the current user's Spotify.            |
-| `/followwho`  | Tells you who the bot is following.                                |
-| `/play`       | Play a song using a search phrase or URLs from Spotify or YouTube. |
-| `/pause`      | Pauses the currently playing song.                                 |
-| `/resume`     | Resumes the currently playing song if it's paused.                 |
-| `/stop`       | Stops the currently playing song.                                  |
+| Command              | Description                                                        |
+| -------------------- | ------------------------------------------------------------------ |
+| `/followme`          | Makes the bot track what you're currently playing on Spotify!      |
+| `/unfollowme`        | Makes the bot stop tracking the current user's Spotify.            |
+| `/followwho`         | Tells you who the bot is following.                                |
+| `/play`              | Play a song using a search phrase or URLs from Spotify or YouTube. |
+| `/pause`             | Pauses the currently playing song.                                 |
+| `/resume`            | Resumes the currently playing song if it's paused.                 |
+| `/stop`              | Stops the currently playing song.                                  |
+| `/currently-playing` | Shows the song that's currently playing                            |
 
 ## Setup Instructions
 
