@@ -41,14 +41,13 @@ const resolveAndPlayTrack = async (
    * and wants it to join there instead.
    */
   player?.clean();
-  if (connection && connection.channelId !== voiceChannelId) {
-    await shoukaku.leaveVoiceChannel(guildId);
-  }
 
   /**
    * Make the bot join voice channel if it already didn't
    */
-  if (!player) {
+  if (!player || connection?.channelId !== voiceChannelId) {
+    await shoukaku.leaveVoiceChannel(guildId);
+
     player = await shoukaku.joinVoiceChannel({
       guildId: guildId,
       channelId: voiceChannelId,
