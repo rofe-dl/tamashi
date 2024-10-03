@@ -67,7 +67,7 @@ const resolveAndPlayTrack = async (
   }
 
   if (player instanceof CustomPlayer) {
-      player.setTrackInfo(track)
+    player.setTrackInfo(track)
   }
 
   await Promise.all([
@@ -185,26 +185,26 @@ export const getCurrentlyPlaying = async (
 
   const player = shoukaku.players.get(interaction.guildId as string);
   if (!player?.track) {
-    await interaction.reply("But I'm not playing anything at the moment..");
+    await interaction.editReply("But I'm not playing anything at the moment..");
     return;
   }
-  
+
   let track: Track | undefined;
-  // If player doesn't have trackinfo, query it.
+
   if (player instanceof CustomPlayer) {
-    logger.info("Getting trackinfo from player")
+    logger.debug("Getting trackinfo from player")
     track = player.getTrackInfo() ?? undefined;
   }
   else {
-      logger.info("Querying trackinfo from Lvlink")
-      track = await player.node.rest.decode(player.track); 
+    logger.debug("Querying trackinfo from Lvlink")
+    track = await player.node.rest.decode(player.track);
   }
-  
+
   if (track) {
     await interaction.editReply({ embeds: [await decorateEmbed(songInfoEmbed, track)] });
   }
   else {
-      await interaction.editReply("I return from my quest, but I must bear the heavy burden of failure.");
+    await interaction.editReply("I return from my quest, but I must bear the heavy burden of failure.");
   }
 
 };
