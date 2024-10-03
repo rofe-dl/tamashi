@@ -2,7 +2,7 @@ services:
   tamashi:
     build: ./
     container_name: tamashi_bot
-    image: rofedl/tamashi:2.0.0
+    image: rofedl/tamashi:2.0.1
     ports:
       - 8080:8080
     depends_on:
@@ -27,7 +27,7 @@ services:
       driver: none
 
   lavalink:
-    image: ghcr.io/lavalink-devs/lavalink:4.0.7
+    image: ghcr.io/lavalink-devs/lavalink:4.0.8
     container_name: tamashi_lavalink
     networks:
       - default
