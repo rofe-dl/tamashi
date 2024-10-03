@@ -9,11 +9,11 @@ import {
 import { getAverageColor } from 'fast-average-color-node';
 import { LoadType, Player, Shoukaku, Track } from 'shoukaku';
 import { songInfoEmbed } from 'utils/embeds';
-import { CustomPlayer } from 'services/custom.player'
+import { CustomPlayer } from 'services/custom.player';
 import logger from 'utils/logger';
 import RedisClient from 'utils/redis';
 
-/*
+/**
  * Helper function to play music, either from the
  * manual /play command or from following someone's
  * Spotify.
@@ -118,7 +118,7 @@ const resolveAndPlayTrack = async (
   }
 
   if (player instanceof CustomPlayer) {
-    player.setTrackInfo(track)
+    player.setTrackInfo(track);
   }
 
   await Promise.all([
@@ -236,7 +236,6 @@ export const getCurrentlyPlaying = async (
   interaction: ChatInputCommandInteraction,
   shoukaku: Shoukaku,
 ) => {
-
   await interaction.deferReply();
 
   const player = shoukaku.players.get(interaction.guildId as string);
@@ -248,25 +247,21 @@ export const getCurrentlyPlaying = async (
   let track: Track | undefined;
 
   if (player instanceof CustomPlayer) {
-    logger.debug("Getting trackinfo from player")
+    logger.debug('Getting track info from player');
     track = player.getTrackInfo() ?? undefined;
-  }
-  else {
-    logger.debug("Querying trackinfo from Lvlink")
+  } else {
+    logger.debug('Querying track info from Lavalink');
     track = await player.node.rest.decode(player.track);
   }
 
   if (track) {
     await interaction.editReply({ embeds: [await decorateEmbed(songInfoEmbed, track)] });
+  } else {
+    await interaction.editReply(
+      'I return from my quest, but I must bear the heavy burden of failure.',
+    );
   }
-  else {
-    await interaction.editReply("I return from my quest, but I must bear the heavy burden of failure.");
-  }
-
 };
-
-
-
 
 async function decorateEmbed(
   embedObject: typeof songInfoEmbed,
@@ -289,9 +284,6 @@ async function decorateEmbed(
 
   return embedObject;
 }
-
-
-
 
 function isURL(s: string): boolean {
   const HTTP_URL_REGEX =

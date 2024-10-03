@@ -56,12 +56,10 @@ const client = new Client({
       },
     ];
 
-    //function createCustomPlayer(guildId: string, node: Node): Player {
-    //    return new CustomPlayer(guildId, node);
-    //}
-    client.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), nodes,
-      { structures: { player: CustomPlayer as Constructor<Player> } });
-    //client.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), nodes);
+    client.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), nodes, {
+      structures: { player: CustomPlayer as Constructor<Player> },
+    });
+
     client.shoukaku.on('error', (_, err) => logger.error('Shoukaku Error: ', err));
     logger.info('Lavalink connected successfully');
 
