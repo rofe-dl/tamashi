@@ -11,6 +11,7 @@ import { LoadType, Player, Shoukaku, Track } from 'shoukaku';
 import { songInfoEmbed } from 'utils/embeds';
 import { CustomPlayer } from 'services/custom.player'
 import logger from 'utils/logger';
+import RedisClient from 'utils/redis';
 
 /*
  * Helper function to play music, either from the
@@ -21,17 +22,65 @@ const resolveAndPlayTrack = async (
   shoukaku: Shoukaku,
   guildId: string,
   voiceChannelId: string,
+  textChannel: TextChannel,
   searchPhrase: string,
   sendReply: (
     message: string | { embeds: (typeof songInfoEmbed)[] },
   ) => Promise<void | Message<boolean>>,
 ): Promise<void> => {
-  await shoukaku.leaveVoiceChannel(guildId);
+  const connection = shoukaku.connections.get(guildId.toString());
 
-  const player = await shoukaku.joinVoiceChannel({
-    guildId: guildId,
-    channelId: voiceChannelId,
-    shardId: 0,
+  // Get existing player if still connected, otherwise join channel
+  let player: Player | undefined;
+
+  if (!connection) {
+    /**
+     * Sometimes the connection doesnt exist after a forced disconnect,
+     * but shoukaku still thinks its connected. To workaround the bug,
+     * we make it leave the channel.
+     */
+    await shoukaku.leaveVoiceChannel(guildId);
+  } else {
+    player = shoukaku.players.get(guildId) as Player;
+    player?.stopTrack();
+  }
+
+  if (!player) {
+    player = await shoukaku.joinVoiceChannel({
+      guildId: guildId,
+      channelId: voiceChannelId,
+      shardId: 0,
+    });
+  }
+
+  // Remove previous event listeners and set new ones
+  player.clean();
+
+  player.on('exception', (reason) => {
+    logger.error(reason.exception);
+  });
+
+  player.on('closed', async () => {
+    /**
+     * If forced to disconnect/move, then unfollow the user if following them
+     * and leave the channel so Shoukaku closes the connection.
+     *
+     * Choosing not to support moving the bot around voice channels
+     * as there's no proper way to differentiate from disconnections.
+     * We'd have to update the redis entry for the updated voice channel ID
+     * if the bot is following someone as well; not worth the hassle.
+     */
+    try {
+      await Promise.all([
+        RedisClient.getInstance().delete(guildId),
+        player.destroy(),
+        textChannel.send("I didn't like that. Bye."),
+      ]);
+
+      await shoukaku.leaveVoiceChannel(guildId);
+    } catch (err) {
+      logger.error(err);
+    }
   });
 
   const node = shoukaku.options.nodeResolver(shoukaku.nodes);
@@ -44,8 +93,10 @@ const resolveAndPlayTrack = async (
   // Retry search with YouTube lyrics if initial search fails
   if (result?.loadType !== LoadType.SEARCH && result?.loadType !== LoadType.TRACK) {
     if (isURL(searchPhrase)) {
-      // TODO: Handle Spotify URL failure by using Spotify API to get the song name and playing from YouTube
+      await sendReply(`Hmm unfortunately, I can't play that :(`);
+      return;
     }
+
     searchPhrase = searchPhrase.replace('ytmsearch', 'ytsearch') + ' lyrics';
     result = await node?.rest.resolve(searchPhrase);
   }
@@ -60,7 +111,7 @@ const resolveAndPlayTrack = async (
     result?.loadType === LoadType.PLAYLIST ||
     result?.loadType === LoadType.EMPTY
   ) {
-    await sendReply(`Didn't really find the song you're looking for :(`);
+    await sendReply(`Hmm unfortunately, I can't play that :(`);
     return;
   } else {
     throw new Error('An error occurred while trying to play that song');
@@ -81,6 +132,9 @@ export const playFromInteraction = async (
   searchPhrase: string,
   shoukaku: Shoukaku,
 ) => {
+  const textChannel = interaction.client.channels.cache.get(
+    interaction.channelId,
+  ) as TextChannel;
   const guildMember = interaction.member as GuildMember;
 
   await interaction.deferReply();
@@ -89,6 +143,7 @@ export const playFromInteraction = async (
     shoukaku,
     interaction.guildId as string,
     guildMember.voice?.channel?.id as string,
+    textChannel,
     searchPhrase,
     async (message) => await interaction.editReply(message),
   );
@@ -108,6 +163,7 @@ export const play = async (
     shoukaku,
     guildId,
     voiceChannelId,
+    textChannel,
     searchPhrase,
     async (message) => await textChannel.send(message),
   );
