@@ -5,8 +5,11 @@ import { loadCommands } from 'utils/loader';
 import RedisClient from 'utils/redis';
 import authApp from './auth.server';
 import { connectDB } from 'db';
-import { Connectors, Shoukaku } from 'shoukaku';
+import { Connectors, Shoukaku, Player } from 'shoukaku';
 import syncSpotifyService from 'services/sync.spotify.service';
+import { CustomPlayer } from 'services/custom.player';
+
+type Constructor<T> = new (...args: unknown[]) => T;
 
 const client = new Client({
   intents: [
@@ -53,7 +56,10 @@ const client = new Client({
       },
     ];
 
-    client.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), nodes);
+    client.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), nodes, {
+      structures: { player: CustomPlayer as Constructor<Player> },
+    });
+
     client.shoukaku.on('error', (_, err) => logger.error('Shoukaku Error: ', err));
     logger.info('Lavalink connected successfully');
 

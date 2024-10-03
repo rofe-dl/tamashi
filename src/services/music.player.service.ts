@@ -9,6 +9,7 @@ import {
 import { getAverageColor } from 'fast-average-color-node';
 import { LoadType, Player, Shoukaku, Track } from 'shoukaku';
 import { songInfoEmbed } from 'utils/embeds';
+import { CustomPlayer } from 'services/custom.player';
 import logger from 'utils/logger';
 import RedisClient from 'utils/redis';
 
@@ -114,6 +115,10 @@ const resolveAndPlayTrack = async (
     return;
   } else {
     throw new Error('An error occurred while trying to play that song');
+  }
+
+  if (player instanceof CustomPlayer) {
+    player.setTrackInfo(track);
   }
 
   await Promise.all([
@@ -225,6 +230,37 @@ export const changePlayerState = async (
     command,
     async (message) => await textChannel.send(message),
   );
+};
+
+export const getCurrentlyPlaying = async (
+  interaction: ChatInputCommandInteraction,
+  shoukaku: Shoukaku,
+) => {
+  await interaction.deferReply();
+
+  const player = shoukaku.players.get(interaction.guildId as string);
+  if (!player?.track) {
+    await interaction.editReply("But I'm not playing anything at the moment..");
+    return;
+  }
+
+  let track: Track | undefined;
+
+  if (player instanceof CustomPlayer) {
+    logger.debug('Getting track info from player');
+    track = player.getTrackInfo() ?? undefined;
+  } else {
+    logger.debug('Querying track info from Lavalink');
+    track = await player.node.rest.decode(player.track);
+  }
+
+  if (track) {
+    await interaction.editReply({ embeds: [await decorateEmbed(songInfoEmbed, track)] });
+  } else {
+    await interaction.editReply(
+      'I return from my quest, but I must bear the heavy burden of failure.',
+    );
+  }
 };
 
 async function decorateEmbed(
