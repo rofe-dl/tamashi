@@ -10,7 +10,7 @@ services:
       driver: none
 
   lavalink:
-    image: ghcr.io/lavalink-devs/lavalink:4.0.7
+    image: ghcr.io/lavalink-devs/lavalink:4.0.8
     container_name: tamashi_lavalink
     ports:
       - 2333:2333
