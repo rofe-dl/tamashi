@@ -6,7 +6,7 @@ import {
 import { deleteRefreshToken, getRefreshToken } from 'db';
 import { playFromInteraction } from 'services/music.player.service';
 import RedisClient from 'utils/redis';
-import { getCurrentPlaying } from 'services/sync.spotify.service';
+import { getCurrentPlaying, waitToSync } from 'services/sync.spotify.service';
 import { IRedisValue } from 'types/redis.type';
 import { ngrokURL, serverURL, NODE_ENV } from 'config.json';
 
@@ -63,24 +63,27 @@ export default {
     if (!currentlyPlaying)
       throw new Error('Currently playing song could not be retrieved');
 
-    const { trackURL, accessToken, isPlaying } = currentlyPlaying;
+    const { trackURL, accessToken, isPlaying, progress } = currentlyPlaying;
 
     if (!trackURL) {
       await interaction.reply("You're not really playing anything on Spotify");
       return;
     }
 
-    await playFromInteraction(interaction, trackURL, interaction.client.shoukaku);
+    await waitToSync(
+      accessToken, 
+      () => playFromInteraction(interaction, trackURL, interaction.client.shoukaku, progress)
+    );
 
-    if (interaction.replied)
-      await interaction.followUp({
-        content: `Lead the way <@${userId}>!`,
-      });
-    else
-      await interaction.reply({
-        content: `Lead the way <@${userId}>!`,
-      });
-
+    //if (interaction.replied)
+    //  await interaction.followUp({
+    //    content: `Lead the way <@${userId}>!`,
+    //  });
+    //else
+    //  await interaction.reply({
+    //    content: `Lead the way <@${userId}>!`,
+    //  });
+    //
     /**
      * Using Redis to track which users the bot should follow in
      * each guild. Using Redis so multiple instances of the bot

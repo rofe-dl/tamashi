@@ -11,6 +11,7 @@ import { LoadType, Player, Shoukaku, Track } from 'shoukaku';
 import { songInfoEmbed } from 'utils/embeds';
 import logger from 'utils/logger';
 import RedisClient from 'utils/redis';
+import { timingService } from './timing.service';
 
 /**
  * Helper function to play music, either from the
@@ -26,6 +27,7 @@ const resolveAndPlayTrack = async (
   sendReply: (
     message: string | { embeds: (typeof songInfoEmbed)[] },
   ) => Promise<void | Message<boolean>>,
+  progress?: number | undefined,
 ): Promise<void> => {
   const connection = shoukaku.connections.get(guildId.toString());
 
@@ -81,7 +83,7 @@ const resolveAndPlayTrack = async (
       logger.error(err);
     }
   });
-
+  
   const node = shoukaku.options.nodeResolver(shoukaku.nodes);
 
   // Check if search phrase is a URL
@@ -115,17 +117,33 @@ const resolveAndPlayTrack = async (
   } else {
     throw new Error('An error occurred while trying to play that song');
   }
+  
+  timingService.setPlayer(player);
 
-  await Promise.all([
-    player.playTrack({ track: { encoded: track.encoded } }),
-    sendReply({ embeds: [await decorateEmbed(songInfoEmbed, track)] }),
-  ]);
+  return new Promise<void>((resolve) => {
+      player.on('start', () => {
+          logger.debug("Track started");
+          if (progress) {
+            player.seekTo(progress)
+              .then(() => {
+                  resolve();
+              })
+          } else resolve();
+      });
+      (async () => {
+          Promise.all([
+              player.playTrack({ track: { encoded: track.encoded } }),
+              sendReply({ embeds: [await decorateEmbed(songInfoEmbed, track)] }),
+          ]);
+      })();
+  });
 };
 
 export const playFromInteraction = async (
   interaction: ChatInputCommandInteraction,
   searchPhrase: string,
   shoukaku: Shoukaku,
+  position?: number | undefined,
 ) => {
   const textChannel = interaction.client.channels.cache.get(
     interaction.channelId,
@@ -141,6 +159,7 @@ export const playFromInteraction = async (
     textChannel,
     searchPhrase,
     async (message) => await interaction.editReply(message),
+    position,
   );
 };
 
@@ -149,6 +168,7 @@ export const play = async (
   voiceChannelId: string,
   guildId: string,
   searchPhrase: string,
+  progress: number | undefined,
   client: Client,
 ) => {
   const shoukaku = client.shoukaku;
@@ -161,6 +181,7 @@ export const play = async (
     textChannel,
     searchPhrase,
     async (message) => await textChannel.send(message),
+    progress,
   );
 };
 
@@ -168,6 +189,7 @@ const handlePlayerStateChange = async (
   player: Player | undefined,
   command: PlayerCommand,
   sendReply: (message: string) => Promise<Message<true> | InteractionResponse<boolean>>,
+  progress?: number | undefined
 ): Promise<void> => {
   switch (command) {
     case PlayerCommand.PAUSE:
@@ -175,6 +197,9 @@ const handlePlayerStateChange = async (
       await sendReply('Paused');
       break;
     case PlayerCommand.RESUME:
+      if (progress) {
+          player?.seekTo(progress);
+      };
       player?.setPaused(false);
       await sendReply('Resumed');
       break;
@@ -215,6 +240,7 @@ export const changePlayerState = async (
   guildId: string,
   command: PlayerCommand,
   client: Client,
+  progress?: number | undefined
 ) => {
   const shoukaku = client.shoukaku;
   const textChannel = client.channels.cache.get(textChannelId) as TextChannel;
@@ -224,6 +250,7 @@ export const changePlayerState = async (
     player,
     command,
     async (message) => await textChannel.send(message),
+    progress,
   );
 };
 
