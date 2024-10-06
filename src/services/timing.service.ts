@@ -13,10 +13,13 @@ class TimingService {
     private measurements: Map<string, { timestamp: number; position: number }>;
     private playerIntervalId?: NodeJS.Timeout;
     private serviceIntervalId?: NodeJS.Timeout;
-    private readonly desyncWindow = 5;
+    private readonly desyncWindow   = 5;
     private desyncHistory: number[] = [];
-    private debug: boolean = false;
-    private resyncReq: boolean = false;
+    private resyncReq: boolean      = false;
+    private buffer: number[]        = [];
+    private readonly bufferlength   = 3;
+    private debug                   = false;
+    private syncLock                = false;
     constructor(debug: boolean = false) {
         this.measurements = new Map();
         this.logPlayerTime = this.logPlayerTime.bind(this);
@@ -31,7 +34,7 @@ class TimingService {
         const position = progress + rtt/2
         this.measurements.set("spotify", { timestamp: timestamp, position: position });
     }
-    public logPlayerTime() {
+    public async logPlayerTime() {
         if (this.player) {
             let position = this.player.position;
             const lavaLinkRTT = this.player.ping;
@@ -40,10 +43,10 @@ class TimingService {
         }
         const desync = this.calculateDesync();
         if (desync) this.updateDesyncHistory(desync);
-        this.resync(10000)
+        await this.resync(10000, desync)
         console.log(desync, this.desyncHistory);
     }
-    public calculateDesync(): number | null {
+    public calculateDesync(): number | undefined {
         if (this.measurements.has("spotify") && this.measurements.has("player")) {
             const playerPos = this.measurements.get("player");
             const spotifyPos = this.measurements.get("spotify");
@@ -65,14 +68,19 @@ class TimingService {
                 return desync;
             }
         }
-        return null;
+        return undefined;
     }
     private updateDesyncHistory(desync: number) {
-        this.desyncHistory.push(desync);
-        if (this.desyncHistory.length > this.desyncWindow) {
-            this.desyncHistory.shift();
+        if(!this.syncLock) {
+            this.desyncHistory.push(desync);
+            if (this.desyncHistory.length > this.desyncWindow) {
+                this.desyncHistory.shift();
+            }
         }
     }
+    /**
+     * Logging interval should be close to spotify sync interval
+     */
     public startPlayerLogging(interval: number) {
         this.stopPlayerLogging();
         this.serviceIntervalId = setInterval(this.logPlayerTime, interval);
@@ -84,15 +92,29 @@ class TimingService {
      * Moves the player forward by the average desync if the average of the 
      * last three desync measurements is above the tolerance threshold.
      */
-    public async resync(tolerance: number) {
+    public async resync(tolerance: number, lastPing?: number) {
         if (this.player && this.desyncHistory.length>2) {
             const average = this.desyncHistory.slice(-3).reduce((acc, val) => acc + val, 0) / 3; 
+            // My main goal is to sync the player with the spotify lmao
+            // my sub goal is to somehow differentiate between wether the desync is because
+            // of the user skipping or the player lagging forward or backwards.
+            // need to create a buffer. check if the new desync measurement is close to the 
+            // average of the desyncHistory or the buffer. if its closer to the buffer. add it to the buffer.
+            // otherwise add it to the desycHistory.
             if (Math.abs(average) > tolerance) {
                 const position = this.player.position;
-                const newPosition = Math.floor(position - average);
+                let newPosition = 0;
+                if (lastPing!= null && lastPing > average) {
+                    newPosition = Math.floor(position - lastPing);
+                } else newPosition = Math.floor(position - average);
+                console.log(this.measurements.get("spotify"));
                 console.log("Current player position:" , position);
                 console.log("Resyncing to new position:", newPosition);
+                // prolly need to add a buffer to weed out anomalies;
+                this.desyncHistory.length = 0;
+                this.syncLock = true;
                 await this.player.seekTo(newPosition) 
+                this.syncLock = false;
             }
         }
     }
