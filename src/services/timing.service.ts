@@ -42,8 +42,8 @@ class TimingService {
             this.measurements.set("player", { timestamp: performance.now(), position: position });
         }
         const desync = this.calculateDesync();
+        await this.resync(5000, desync)
         if (desync) this.updateDesyncHistory(desync);
-        await this.resync(10000, desync)
         console.log(desync, this.desyncHistory);
     }
     public calculateDesync(): number | undefined {
@@ -104,7 +104,7 @@ class TimingService {
             if (Math.abs(average) > tolerance) {
                 const position = this.player.position;
                 let newPosition = 0;
-                if (lastPing!= null && lastPing > average) {
+                if (lastPing!= null && Math.abs(lastPing) > Math.abs(average)) {
                     newPosition = Math.floor(position - lastPing);
                 } else newPosition = Math.floor(position - average);
                 console.log(this.measurements.get("spotify"));
@@ -113,7 +113,10 @@ class TimingService {
                 // prolly need to add a buffer to weed out anomalies;
                 this.desyncHistory.length = 0;
                 this.syncLock = true;
+                const start = performance.now();
                 await this.player.seekTo(newPosition) 
+                const end = performance.now();
+                console.log("seek time: ", end - start);
                 this.syncLock = false;
             }
         }

@@ -85,7 +85,7 @@ const resolveAndPlayTrack = async (
   });
   
   const node = shoukaku.options.nodeResolver(shoukaku.nodes);
-
+  const startTime = performance.now();
   // Check if search phrase is a URL
   if (!isURL(searchPhrase)) searchPhrase = 'ytmsearch: ' + searchPhrase;
 
@@ -117,13 +117,16 @@ const resolveAndPlayTrack = async (
   } else {
     throw new Error('An error occurred while trying to play that song');
   }
+  const endTime = performance.now();
+  console.log("Time to find track:", endTime - startTime);
   
-  timingService.setPlayer(player);
+  
   const trackLength = track?.info?.length
   logger.debug(`player tracklength = ${trackLength}`);
   return new Promise<void>((resolve) => {
       player.on('start', () => {
           logger.debug("Track started");
+          timingService.setPlayer(player);
           if (progress) {
             player.seekTo(progress)
               .then(() => {

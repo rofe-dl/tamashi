@@ -70,10 +70,13 @@ export default {
       return;
     }
 
+    let startTime = performance.now();
     await waitToSync(
       accessToken, 
       () => playFromInteraction(interaction, trackURL, interaction.client.shoukaku, progress)
     );
+    let endTime = performance.now();
+    console.log("Time to search and play track:", endTime - startTime);
 
     //if (interaction.replied)
     //  await interaction.followUp({
