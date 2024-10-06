@@ -119,7 +119,8 @@ const resolveAndPlayTrack = async (
   }
   
   timingService.setPlayer(player);
-
+  const trackLength = track?.info?.length
+  logger.debug(`player tracklength = ${trackLength}`);
   return new Promise<void>((resolve) => {
       player.on('start', () => {
           logger.debug("Track started");

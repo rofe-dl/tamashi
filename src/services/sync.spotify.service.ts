@@ -157,11 +157,13 @@ export async function getCurrentPlaying(
   const trackURL = currentPlaying?.body?.item?.external_urls?.spotify;
   const isPlaying = currentPlaying?.body?.is_playing ? true : false;
   const progress = currentPlaying?.body?.progress_ms ?? undefined;
+  const trackLength = currentPlaying?.body?.item?.duration_ms;
+  logger.debug(`spotify track length = ${trackLength}`)
   logger.debug(`getCurrentTrack spotify api RTT: ${rtt}`)
   
   if (progress) {
       // need to pass in network RTT as well for api call.
-      timingService.logSpotifyTime(performance.now(), progress+rtt);
+      timingService.logSpotifyTime(performance.now(), progress, rtt);
   }
     
   return { trackURL, accessToken, isPlaying, progress };
