@@ -6,4 +6,5 @@ export interface IRedisValue {
   isPlaying: boolean;
   voiceChannelId: string;
   textChannelId: string;
+  subscription: string;
 }

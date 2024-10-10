@@ -8,6 +8,7 @@ import { changePlayerState, play, PlayerCommand } from './music.player.service';
 import { Shoukaku } from 'shoukaku';
 import { timingService } from 'services/timing.service';
 import { startTimer } from 'winston';
+import axios from 'axios';
 
 const spotifyApi = new SpotifyWebApi({
   clientId: spotify.clientId,
@@ -43,6 +44,7 @@ export default async (client: Client) => {
             return;
         }
         const redisObject: IRedisValue = JSON.parse(value);
+        console.log(redisObject);
 
         const updatedCurrentPlaying = await getCurrentPlaying(
           redisObject.refreshToken,
@@ -146,7 +148,8 @@ export async function getCurrentPlaying(
   } catch {
     logger.debug('Failed to retrieve song with existing access token. Updating.');
     const data = await spotifyApi.refreshAccessToken();
-    spotifyApi.setAccessToken(data.body['access_token']);
+    accessToken = data.body['access_token']
+    spotifyApi.setAccessToken(accessToken);
     
     startTime = performance.now();
     currentPlaying = await spotifyApi.getMyCurrentPlayingTrack();
@@ -162,7 +165,8 @@ export async function getCurrentPlaying(
   logger.debug(`getCurrentTrack spotify api RTT: ${rtt}`)
   
   if (progress) {
-      // need to pass in network RTT as well for api call.
+      //const spotifyQueue = await getUserQueue(accessToken);
+      //need to pass in network RTT as well for api call.
       timingService.logSpotifyTime(performance.now(), progress, rtt);
   }
     
@@ -180,7 +184,35 @@ export async function waitToSync(accessToken: string, play: () => Promise<void>)
   } else {
       await play();
   }
-
-
 }
 
+async function getUserQueue(accessToken: string) {
+  logger.debug(accessToken);
+  const url = 'https://api.spotify.com/v1/me/player/queue';
+  try {
+    const response = await axios.get(url, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    logger.debug('Queue request successful');
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
+      const message = error.response?.data?.error?.message;
+      
+      logger.error(`Queue request failed - Status: ${status}, Message: ${message}`);
+      
+      if (status === 403) {
+        logger.error('403 Forbidden - This likely indicates missing scopes. Required scope: user-read-playback-state');
+        throw new Error('Missing required Spotify API scope: user-read-playback-state');
+      }
+      
+      throw error;
+    }
+    throw error;
+  }
+}
