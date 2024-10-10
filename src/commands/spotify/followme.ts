@@ -70,8 +70,11 @@ export default {
       return;
     }
 
+    
+
     let startTime = performance.now();
     await waitToSync(
+      "free",
       accessToken, 
       () => playFromInteraction(interaction, trackURL, interaction.client.shoukaku, progress)
     );

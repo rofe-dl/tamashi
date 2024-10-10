@@ -15,8 +15,9 @@ const spotifyApi = new SpotifyWebApi({
   clientSecret: spotify.clientSecret,
 });
 
+const redis = RedisClient.getInstance();
+
 export default async (client: Client) => {
-  const redis = RedisClient.getInstance();
   // iterate over all the servers joined by bot
   for (let guildId of Array.from(client.guilds.cache.keys())) {
     /**
@@ -173,10 +174,16 @@ export async function getCurrentPlaying(
   return { trackURL, accessToken, isPlaying, progress };
 }
 
-export async function waitToSync(accessToken: string, play: () => Promise<void>) {
+export async function getUserSubsciption(accessToken: string) {
+    spotifyApi.setAccessToken(accessToken);
+    const userinfo = await spotifyApi.getMe();
+    const subscription = userinfo?.body?.product ?? "free"// could speed this up by caching user subscription data 
+    return subscription;
+}
+
+
+export async function waitToSync(subscription: string, accessToken: string, play: () => Promise<void>) {
   spotifyApi.setAccessToken(accessToken);
-  const userinfo = await spotifyApi.getMe();
-  const subscription = userinfo?.body?.product // could speed this up by caching user subscription data 
   if (subscription === "premium") {
       spotifyApi.pause();
       await play();
