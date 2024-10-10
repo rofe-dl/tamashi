@@ -181,16 +181,37 @@ export async function getUserSubsciption(accessToken: string) {
     return subscription;
 }
 
-
-export async function waitToSync(subscription: string, accessToken: string, play: () => Promise<void>) {
-  spotifyApi.setAccessToken(accessToken);
-  if (subscription === "premium") {
-      spotifyApi.pause();
-      await play();
-      await spotifyApi.play();
-  } else {
-      await play();
+export async function waitToSync(userId: string, accessToken: string, play: () => Promise<void>) {
+  let subscription;
+  try {
+      const value = await redis.get(userId);
+      if (value) subscription = value
+      else {
+          subscription = await getUserSubsciption(accessToken);
+          redis.set(userId, subscription);
+      }
+  } catch(err) {
+      logger.error("Error retrieve subscription value from redis", err);
   }
+
+  spotifyApi.setAccessToken(accessToken);
+  try {
+      if (subscription === "premium") {
+          spotifyApi.pause();
+          await play();
+          await spotifyApi.play();
+      } else {
+          await play();
+      }
+  } catch (error: any) {
+      if (error.status == 403) {
+          logger.error("Possibly made pause/play api request on non-premium user. refreshing user subscription cache...");
+          await play();
+          const value = await getUserSubsciption(accessToken);
+          redis.set(userId, value);
+      }
+  }
+
 }
 
 async function getUserQueue(accessToken: string) {
