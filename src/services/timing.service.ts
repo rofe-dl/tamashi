@@ -42,7 +42,7 @@ class TimingService {
             this.measurements.set("player", { timestamp: performance.now(), position: position });
         }
         const desync = this.calculateDesync();
-        await this.resync(5000, desync)
+        await this.resync(10000, desync)
         if (desync) this.updateDesyncHistory(desync);
         console.log(desync, this.desyncHistory);
     }

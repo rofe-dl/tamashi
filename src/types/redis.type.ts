@@ -7,4 +7,5 @@ export interface IRedisValue {
   voiceChannelId: string;
   textChannelId: string;
   subscription: string;
+  nextTrackURL?: string | null;
 }

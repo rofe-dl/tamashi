@@ -43,7 +43,7 @@ export default {
     let currentlyPlaying;
 
     try {
-      currentlyPlaying = await getCurrentPlaying(refreshToken);
+      currentlyPlaying = await getCurrentPlaying(userId, refreshToken);
     } catch (err: any) {
       if (err.statusCode == 400) {
         const contentString = `It appears you may have revoked my access to your Spotify account.\nVisit ${NODE_ENV === 'production' ? serverURL : ngrokURL}/tamashi/login?userId=${userId}.`;
@@ -74,7 +74,7 @@ export default {
 
     let startTime = performance.now();
     await waitToSync(
-      "free",
+      userId,
       accessToken, 
       () => playFromInteraction(interaction, trackURL, interaction.client.shoukaku, progress)
     );
