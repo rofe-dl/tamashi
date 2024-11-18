@@ -8,18 +8,26 @@ services:
       - default
     logging:
       driver: none
-
   lavalink:
-    image: ghcr.io/lavalink-devs/lavalink:4.0.7
+    build:
+      context: .
+      dockerfile: Dockerfile.lavalink
     container_name: tamashi_lavalink
     ports:
       - 2333:2333
     networks:
       - default
-    volumes:
-      - type: bind
-        source: ./application.yml
-        target: /opt/Lavalink/application.yml
+  # lavalink:
+  #   image: ghcr.io/lavalink-devs/lavalink:4.0.7
+  #   container_name: tamashi_lavalink
+  #   ports:
+  #     - 2333:2333
+  #   networks:
+  #     - default
+  #   volumes:
+  #     - type: bind
+  #       source: ./application.yml
+  #       target: /opt/Lavalink/application.yml
 
 networks:
   default:

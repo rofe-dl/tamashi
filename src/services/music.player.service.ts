@@ -12,6 +12,11 @@ import { songInfoEmbed } from 'utils/embeds';
 import logger from 'utils/logger';
 import RedisClient from 'utils/redis';
 import { timingService } from './timing.service';
+import { ShoukakuQueue } from './queue.service';
+import { CustomRest } from './custom.rest';
+import { PlayerManager } from './player.manager';
+
+const playerManagers = new Map<string, PlayerManager>();
 
 /**
  * Helper function to play music, either from the
@@ -28,8 +33,16 @@ const resolveAndPlayTrack = async (
     message: string | { embeds: (typeof songInfoEmbed)[] },
   ) => Promise<void | Message<boolean>>,
   progress?: number | undefined,
+  nextTrack?: string,
 ): Promise<void> => {
   const connection = shoukaku.connections.get(guildId.toString());
+  const node = shoukaku.options.nodeResolver(shoukaku.nodes);
+  if (!node) {
+      throw new Error("Why the fuck is there no node");
+  }
+
+  const playerManager = playerManagers.get(guildId) ?? new PlayerManager(guildId, node, connection );
+  playerManagers.set(guildId, playerManager);
 
   // Get existing player if still connected, otherwise join channel
   let player: Player | undefined;
@@ -52,40 +65,82 @@ const resolveAndPlayTrack = async (
       channelId: voiceChannelId,
       shardId: 0,
     });
+    const connection = shoukaku.connections.get(guildId.toString());
+    if (connection) { playerManager.setConnection(connection); } 
+    else {logger.error("why is there no connection");}
+    playerManager.setPlayer(player);
   }
 
   // Remove previous event listeners and set new ones
   player.clean();
 
+
   player.on('exception', (reason) => {
     logger.error(reason.exception);
   });
 
-  player.on('closed', async () => {
-    /**
-     * If forced to disconnect/move, then unfollow the user if following them
-     * and leave the channel so Shoukaku closes the connection.
-     *
-     * Choosing not to support moving the bot around voice channels
-     * as there's no proper way to differentiate from disconnections.
-     * We'd have to update the redis entry for the updated voice channel ID
-     * if the bot is following someone as well; not worth the hassle.
-     */
-    try {
-      await Promise.all([
-        RedisClient.getInstance().delete(guildId),
-        player.destroy(),
-        textChannel.send("I didn't like that. Bye."),
-      ]);
+  //player.on('closed', async () => {
+  //  /**
+  //   * If forced to disconnect/move, then unfollow the user if following them
+  //   * and leave the channel so Shoukaku closes the connection.
+  //   *
+  //   * Choosing not to support moving the bot around voice channels
+  //   * as there's no proper way to differentiate from disconnections.
+  //   * We'd have to update the redis entry for the updated voice channel ID
+  //   * if the bot is following someone as well; not worth the hassle.
+  //   */
+  //  try {
+  //    await Promise.all([
+  //      RedisClient.getInstance().delete(guildId),
+  //      player.destroy(),
+  //      textChannel.send("I didn't like that. Bye."),
+  //    ]);
+  //
+  //    await shoukaku.leaveVoiceChannel(guildId);
+  //  } catch (err) {
+  //    logger.error(err);
+  //  }
+  //});
+  //
 
-      await shoukaku.leaveVoiceChannel(guildId);
-    } catch (err) {
-      logger.error(err);
-    }
-  });
-  
-  const node = shoukaku.options.nodeResolver(shoukaku.nodes);
-  const startTime = performance.now();
+  if (searchPhrase === playerManager.currentTrackURL) { return }
+  if (searchPhrase === playerManager.queuedTrackURL) {
+      playerManager.playNext();
+      if(nextTrack && nextTrack != playerManager.queuedTrackURL) {
+          searchPhrase = nextTrack;
+          //searchPhrase = 'https://open.spotify.com/track/6k0X05danQOXSBTVek5DU1'
+          if (!isURL(searchPhrase)) searchPhrase = 'ytmsearch: ' + searchPhrase;
+
+          let result2 = await node?.rest.resolve(searchPhrase);
+
+          // Retry search with YouTube lyrics if initial search fails
+          if (result2?.loadType !== LoadType.SEARCH && result2?.loadType !== LoadType.TRACK) {
+              searchPhrase = searchPhrase.replace('ytmsearch', 'ytsearch') + ' lyrics';
+              result2 = await node?.rest.resolve(searchPhrase);
+          }
+
+          let track2: Track | undefined;
+
+          if (result2?.loadType === LoadType.SEARCH) {
+              track2 = result2.data.shift() as Track;
+          } else if (result2?.loadType === LoadType.TRACK) {
+              track2 = result2.data as Track;
+          } else if (
+              result2?.loadType === LoadType.PLAYLIST ||
+              result2?.loadType === LoadType.EMPTY
+          ) {
+              logger.error("Could not resolve the next track");
+          } else {
+              throw new Error('An error occurred while trying to play that song');
+          }
+          if (track2) {
+              playerManager.queuedTrackURL = searchPhrase;
+              playerManager.queueTrack(track2);
+          }
+      }
+      return;
+
+  } 
   // Check if search phrase is a URL
   if (!isURL(searchPhrase)) searchPhrase = 'ytmsearch: ' + searchPhrase;
 
@@ -117,26 +172,78 @@ const resolveAndPlayTrack = async (
   } else {
     throw new Error('An error occurred while trying to play that song');
   }
-  const endTime = performance.now();
-  console.log("Time to find track:", endTime - startTime);
+  // temporarily forcing newTrack to be true 
+  //nextTrack = "shitfuck"
+  console.log("Printing next track............", nextTrack)
+  if(nextTrack && nextTrack != playerManager.queuedTrackURL) {
+      searchPhrase = nextTrack;
+      //searchPhrase = 'https://open.spotify.com/track/6k0X05danQOXSBTVek5DU1'
+      if (!isURL(searchPhrase)) searchPhrase = 'ytmsearch: ' + searchPhrase;
+
+      let result2 = await node?.rest.resolve(searchPhrase);
+
+      // Retry search with YouTube lyrics if initial search fails
+      if (result2?.loadType !== LoadType.SEARCH && result2?.loadType !== LoadType.TRACK) {
+          searchPhrase = searchPhrase.replace('ytmsearch', 'ytsearch') + ' lyrics';
+          result2 = await node?.rest.resolve(searchPhrase);
+      }
+
+      let track2: Track | undefined;
+
+      if (result2?.loadType === LoadType.SEARCH) {
+          track2 = result2.data.shift() as Track;
+      } else if (result2?.loadType === LoadType.TRACK) {
+          track2 = result2.data as Track;
+      } else if (
+          result2?.loadType === LoadType.PLAYLIST ||
+          result2?.loadType === LoadType.EMPTY
+      ) {
+          logger.error("Could not resolve the next track");
+      } else {
+          throw new Error('An error occurred while trying to play that song');
+      }
+      if (track2) {
+          playerManager.queuedTrackURL = searchPhrase;
+          playerManager.queueTrack(track2);
+      }
+  } else {
+      // keep the inactive player alive.
+      playerManager.refreshQueue();
+  }
+    
+
   
-  
-  const trackLength = track?.info?.length
-  logger.debug(`player tracklength = ${trackLength}`);
   return new Promise<void>((resolve) => {
+      // should probably add a timeout here so that app doesnt get stuck
       player.on('start', () => {
           logger.debug("Track started");
-          timingService.setPlayer(player);
-          if (progress) {
-            player.seekTo(progress)
+          if (node) {
+
+              const getPlayers = () => {node.rest.getPlayers()
+                                    .then(players => {
+                                        console.log("lavaplayers", players)
+                                    }); 
+              }
+              
+              setInterval(getPlayers,5000) 
+          }
+          //player.clean(); 
+          //timingService.setPlayer(player);
+          //player.playTrack({ track: {encoded: track2.encoded}}, true);
+          logger.debug("Trying to move track forward");
+          if (progress && progress > 5000000) {
+            player.seekTo(progress+500)
               .then(() => {
+                  logger.debug("Successfully moved track forward");
                   resolve();
               })
           } else resolve();
       });
       (async () => {
           Promise.all([
-              player.playTrack({ track: { encoded: track.encoded } }),
+              //player.playTrack( { track: { encoded: track.encoded } }),
+              playerManager.currentTrackURL = searchPhrase,
+              playerManager.playTrack(track),
               sendReply({ embeds: [await decorateEmbed(songInfoEmbed, track)] }),
           ]);
       })();
@@ -174,6 +281,7 @@ export const play = async (
   searchPhrase: string,
   progress: number | undefined,
   client: Client,
+  nextTrack?: string,
 ) => {
   const shoukaku = client.shoukaku;
   const textChannel = client.channels.cache.get(textChannelId) as TextChannel;
@@ -186,6 +294,7 @@ export const play = async (
     searchPhrase,
     async (message) => await textChannel.send(message),
     progress,
+    nextTrack,
   );
 };
 
@@ -204,7 +313,7 @@ const handlePlayerStateChange = async (
       if (progress) {
           player?.seekTo(progress);
       };
-      player?.setPaused(false);
+      player?.setPaused(false); // check set paused vs resume performance
       await sendReply('Resumed');
       break;
     case PlayerCommand.STOP:

@@ -1,0 +1,19 @@
+FROM openjdk:17-jdk-slim
+
+WORKDIR /opt/Lavalink
+
+# Copy the new Lavalink JAR file
+COPY Lavalink.jar ./Lavalink.jar
+
+# Copy the application.yml
+COPY application.yml ./application.yml
+
+EXPOSE 2333
+
+# List contents of the directory
+RUN ls -la
+
+# Print the manifest of the JAR file
+RUN jar tf Lavalink.jar | grep MANIFEST.MF
+
+ENTRYPOINT ["java", "-jar", "Lavalink.jar"]

@@ -5,9 +5,8 @@ import RedisClient from 'utils/redis';
 import logger from 'utils/logger';
 import { IRedisValue } from 'types/redis.type';
 import { changePlayerState, play, PlayerCommand } from './music.player.service';
-import { Shoukaku } from 'shoukaku';
 import { timingService } from 'services/timing.service';
-import { startTimer } from 'winston';
+//import UsersQueueResponse from 'spotify-api';
 import axios from 'axios';
 
 const spotifyApi = new SpotifyWebApi({
@@ -48,6 +47,7 @@ export default async (client: Client) => {
         console.log(redisObject);
 
         const updatedCurrentPlaying = await getCurrentPlaying(
+          redisObject.userId,
           redisObject.refreshToken,
           redisObject.accessToken,
         );
@@ -68,6 +68,7 @@ export default async (client: Client) => {
               updatedCurrentPlaying.trackURL,
               updatedCurrentPlaying.progress,
               client,
+              updatedCurrentPlaying.nextTrackURL,
             );
           }
 
@@ -126,9 +127,10 @@ export default async (client: Client) => {
  * @throws {Error} Will throw an error if the Spotify API encounters issues fetching the current track, even after refreshing the access token.
  */
 export async function getCurrentPlaying(
+  userId: string,
   refreshToken: string,
   accessToken?: string,
-): Promise<{ trackURL: string | undefined; accessToken: string; isPlaying: boolean, progress: number | undefined }> {
+): Promise<{ trackURL: string | undefined; accessToken: string; isPlaying: boolean, progress: number | undefined, nextTrackURL: string | undefined}> {
   spotifyApi.setRefreshToken(refreshToken);
   if (!accessToken) {
     const data = await spotifyApi.refreshAccessToken();
@@ -138,13 +140,17 @@ export async function getCurrentPlaying(
   spotifyApi.setAccessToken(accessToken);
 
   let currentPlaying;
+  let nextTrackURL;
   let startTime = 0;
   let endTime = 0;
 
   // if it fails due to expired access token, refreshes it and tries again
   try {
     startTime = performance.now();
-    currentPlaying = await spotifyApi.getMyCurrentPlayingTrack();
+    [currentPlaying, nextTrackURL] = await Promise.all([
+        spotifyApi.getMyCurrentPlayingTrack(),
+        getNextTrack(accessToken, userId),
+    ]);
     endTime = performance.now();
   } catch {
     logger.debug('Failed to retrieve song with existing access token. Updating.');
@@ -153,12 +159,16 @@ export async function getCurrentPlaying(
     spotifyApi.setAccessToken(accessToken);
     
     startTime = performance.now();
-    currentPlaying = await spotifyApi.getMyCurrentPlayingTrack();
+    [currentPlaying, nextTrackURL] = await Promise.all([
+        spotifyApi.getMyCurrentPlayingTrack(),
+        getNextTrack(accessToken, userId),
+    ]);
     endTime = performance.now();
   }
 
   const rtt = Math.round(endTime - startTime);
   const trackURL = currentPlaying?.body?.item?.external_urls?.spotify;
+  console.log(trackURL);
   const isPlaying = currentPlaying?.body?.is_playing ? true : false;
   const progress = currentPlaying?.body?.progress_ms ?? undefined;
   const trackLength = currentPlaying?.body?.item?.duration_ms;
@@ -171,7 +181,7 @@ export async function getCurrentPlaying(
       timingService.logSpotifyTime(performance.now(), progress, rtt);
   }
     
-  return { trackURL, accessToken, isPlaying, progress };
+  return { trackURL, accessToken, isPlaying, progress, nextTrackURL };
 }
 
 export async function getUserSubsciption(accessToken: string) {
@@ -188,7 +198,7 @@ export async function waitToSync(userId: string, accessToken: string, play: () =
       if (value) subscription = value
       else {
           subscription = await getUserSubsciption(accessToken);
-          redis.set(userId, subscription);
+          redis.set(userId, subscription); //TODO: set appropriate expiry date
       }
   } catch(err) {
       logger.error("Error retrieve subscription value from redis", err);
@@ -214,7 +224,7 @@ export async function waitToSync(userId: string, accessToken: string, play: () =
 
 }
 
-async function getUserQueue(accessToken: string) {
+async function getUserQueue(accessToken: string): Promise<SpotifyApi.UsersQueueResponse> {
   logger.debug(accessToken);
   const url = 'https://api.spotify.com/v1/me/player/queue';
   try {
@@ -226,7 +236,7 @@ async function getUserQueue(accessToken: string) {
     });
     
     logger.debug('Queue request successful');
-    return response.data;
+    return response.data as SpotifyApi.UsersQueueResponse;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const status = error.response?.status;
@@ -236,11 +246,23 @@ async function getUserQueue(accessToken: string) {
       
       if (status === 403) {
         logger.error('403 Forbidden - This likely indicates missing scopes. Required scope: user-read-playback-state');
-        throw new Error('Missing required Spotify API scope: user-read-playback-state');
       }
       
       throw error;
     }
     throw error;
   }
+}
+
+async function getNextTrack(accessToken: string, userId: string): Promise<string | undefined> {
+    // implement error handling?
+    const value = await redis.get(userId);
+    // should have cached user subscription info by the time this function is called
+    if (value && value === "premium") {
+        const data = await getUserQueue(accessToken);
+        const trackURL = data?.queue[0]?.external_urls.spotify;
+        return trackURL;
+    } else {
+        return undefined; 
+    }
 }
