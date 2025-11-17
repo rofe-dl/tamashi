@@ -20,7 +20,7 @@
   },
   "redis": {
     "host": "localhost",
-    "port": 6379
+    "port": "should be 6379, but if running locally use 3333 to match docker-compose file"
   },
   "mongodb": {
     "url": "url to your mongodb database, should start with mongodb+srv://"

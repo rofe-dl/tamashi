@@ -1,10 +1,12 @@
 {
   "name": "tamashi",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "A Discord bot",
   "main": "index.ts",
   "scripts": {
-    "start": "nodemon",
+    "build": "tsc && tsc-alias --resolve-full-paths",
+    "start": "node ./dist/index.js",
+    "start:dev": "nodemon",
     "deploycommands": "npx ts-node ./src/deploy.commands.ts",
     "deletecommands": "npx ts-node ./src/delete.commands.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -28,6 +30,7 @@
     "redis": "^4.7.0",
     "shoukaku": "^4.1.1",
     "spotify-web-api-node": "^5.0.2",
+    "tsc-alias": "^1.8.16",
     "winston": "^3.14.2",
     "winston-transport": "^4.7.1"
   },
