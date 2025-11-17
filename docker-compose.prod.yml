@@ -2,7 +2,7 @@ services:
   tamashi:
     build: ./
     container_name: tamashi_bot
-    image: rofedl/tamashi:2.0.1
+    image: rofedl/tamashi:2.0.2
     ports:
       - 8080:8080
     depends_on:
