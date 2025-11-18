@@ -35,7 +35,7 @@ services:
       driver: none
 
   lavalink:
-    image: ghcr.io/lavalink-devs/lavalink:4.0.8
+    image: ghcr.io/lavalink-devs/lavalink:4.1.1
     container_name: tamashi_lavalink
     networks:
       - default
