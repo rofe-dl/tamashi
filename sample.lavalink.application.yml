@@ -3,6 +3,8 @@ server: # REST and WS server
   address: 0.0.0.0
 plugins:
   youtube:
+    remoteCipher:
+      url: 'http://tamashi_yt_cipher:8001' # The URL of remote cipher server that's running with Docker compose. The domain should be the container name defined in docker instead of IP.
     enabled: true # Whether this source can be used.
     oauth:
       # set this to true and follow steps below if you really wanna be able to play from youtube without their bot detection

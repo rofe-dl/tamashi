@@ -17,7 +17,14 @@ services:
       - type: bind
         source: ./config.json
         target: /opt/tamashi/src/config.json
-
+  ejs-api:
+    image: ghcr.io/kikkia/yt-cipher:master
+    container_name: tamashi_yt_cipher
+    ports:
+      - 8001:8001
+    restart: unless-stopped
+    networks:
+      - default
   redis:
     image: redis:7.4.0
     container_name: tamashi_redis
