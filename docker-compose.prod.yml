@@ -2,12 +2,13 @@ services:
   tamashi:
     build: ./
     container_name: tamashi_bot
-    image: rofedl/tamashi:2.0.2
+    image: rofedl/tamashi:2.0.3
     ports:
       - 8080:8080
     depends_on:
       - redis
       - lavalink
+      - ejs-api
     networks:
       - default
     environment:
